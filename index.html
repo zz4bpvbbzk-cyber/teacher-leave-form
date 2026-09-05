@@ -162,7 +162,8 @@
   }
   .t1-sign-lower{padding:5px 9px !important;display:flex;align-items:center;min-height:0}
   .t1-sign .sign-space{flex:1 1 0;min-height:24px}
-  .t1-sign .sign-note{font-size:11px;color:#444;white-space:nowrap}
+  .t1-sign .sign-note{font-size:12.5px;color:#444;white-space:nowrap;font-weight:700}
+  .t1-sign .cell-title input{width:7em;font-size:12px;margin-left:4px;padding:1px 4px}
   .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
   .fill-date select{font-size:11.5px}
   .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px}
@@ -257,6 +258,7 @@
     .stamp-space{height:18px}
     .t1-sign{min-height:0}
     .t1-sign .sign-space{min-height:18px}
+    .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
     .t1 td{padding:4px 6px}
     .t1-sign .sign-space{height:20px}
     .type-grid{font-size:10.5px;gap:1px 6px}
@@ -323,9 +325,9 @@
         <td class="t1-sign" style="width:30%">
           <div class="t1-sign-inner">
           <div class="t1-sign-upper">
-            <div class="cell-title">請假教師簽名</div>
+            <div class="cell-title">請假教師 <input data-key="teacherName" type="text" placeholder="請輸入姓名"></div>
             <div class="sign-space"></div>
-            <div class="sign-note">（已確認線上送出假單，請簽名勿蓋章）</div>
+            <div class="sign-note">（已確認線上送出假單，<strong>請簽名勿蓋章</strong>）</div>
           </div>
           <div class="t1-sign-lower">
             <div class="fill-date">填寫日期：<select data-key="fillM"></select> 月 <select data-key="fillD"></select> 日</div>
@@ -562,6 +564,8 @@
     var leaveKeys=['type1','type2','type3','type4','type5','type6','type7','type8','type9','type10','type11','type12'];
     var optKeys=['opt1','opt2','opt3','opt4'];
     function any(keys){ return keys.some(function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el&&el.checked; }); }
+    var tn=document.querySelector('[data-key="teacherName"]');
+    var tnOk=tn && tn.value.trim()!=='';
     var rows=courseBody.children.length;
     var feeOk=true, feeRows=[];
     for(var i=0;i<rows;i++){
@@ -569,7 +573,7 @@
       var f2=document.querySelector('[data-key="c'+i+'_fee2"]');
       if(f1&&f2&&!f1.checked&&!f2.checked){ feeOk=false; feeRows.push(i+1); }
     }
-    return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows};
+    return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk};
   }
   document.getElementById('printBtn').addEventListener('click',function(){
     save();
@@ -577,6 +581,7 @@
     var msgs=[];
     if(!v.leave) msgs.push('請在「假別」至少勾選一項');
     if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
+    if(!v.tnOk) msgs.push('請填寫「請假教師」姓名');
     if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請至少勾選一項');
     if(msgs.length){ showToast(msgs.join('，')); return; }
     window.print();
