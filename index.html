@@ -303,6 +303,52 @@
   .pdf-preview-wrap img{max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
   .pdf-modal-actions{display:flex;justify-content:flex-end;gap:10px}
   @media print{.pdf-modal{display:none !important}}
+
+  /* ---------- 手機版響應式 ---------- */
+  @media (max-width:640px){
+    .toolbar{padding:8px 10px;gap:8px;flex-wrap:wrap}
+    .toolbar h1{font-size:14px}
+    .toolbar .sub{font-size:10px}
+    .toolbar .seal{width:34px;height:34px;font-size:12px}
+    .save-hint{font-size:10px}
+    .btn{padding:7px 10px;font-size:12px}
+    .steps{padding:8px 10px;font-size:11px;gap:6px}
+    .sheet-wrap{padding:10px 6px 30px}
+    .form-sheet{width:100%;min-height:0;padding:6mm 4mm;font-size:11px;box-shadow:none;border:1px solid #ccc}
+    .form-top h1{font-size:14px}
+    .form-top .note{font-size:10px}
+    .top-meta{flex-direction:column;align-items:flex-start;gap:4px}
+    .form-no{font-size:11px}
+    .t1 td{padding:4px 5px}
+    .t1-sign{min-height:160px}
+    .t1-sign-upper{padding:4px 5px !important}
+    .t1-sign .cell-title input{width:6em}
+    .t1-sign .sign-note{font-size:10.5px}
+    .type-grid{grid-template-columns:1fr;font-size:11px;gap:2px}
+    .t1-reason textarea{height:60px}
+    .t1p-label{font-size:11px}
+    .t1p-main{padding:4px 6px !important}
+    .t1p-main select{font-size:10px;padding:1px;max-width:3.4em}
+    .t1p-total-label{font-size:11px}
+    .t1p-total-value{font-size:11px}
+    .sec-title{font-size:14px}
+    .t2-left,.t2-right{width:100%;display:block}
+    .t2 td{display:block;border-right:none}
+    .rules{padding:5px 8px}
+    .rules li{font-size:10.5px}
+    .rules .sub{padding-left:1.5em;text-indent:-1.5em}
+    .stamp-row{flex-direction:column}
+    .stamp-cell{border-right:none;border-bottom:1px solid #000}
+    .stamp-cell:last-child{border-bottom:none}
+    /* 課務明細表：手機上橫向捲動 */
+    .t3-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .t3{min-width:640px}
+    .duty-agent{white-space:normal}
+    .duty-agent .sig-line{margin-left:18px}
+    .row-actions{flex-wrap:wrap}
+    .pdf-modal-box{margin:10px;padding:14px}
+  }
+
 </style>
 </head>
 <body>
@@ -434,6 +480,7 @@
 
     <!-- 第三區：課務明細表 -->
     <div class="sec-title">需代課之課務明細</div>
+    <div class="t3-wrap">
     <table class="t3">
       <colgroup>
         <col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:19%">
@@ -445,6 +492,7 @@
       </thead>
       <tbody id="courseBody"></tbody>
     </table>
+    </div>
     <div class="row-actions screen-only">
       <button class="btn outline" id="addRow2">＋ 新增課務列</button>
       <span class="tip">說明第 3 點：課務處理欄位若不敷使用得自行增列。</span>
@@ -687,6 +735,23 @@
     if(end<start) showToast('請注意：「結束時間」早於「開始時間」');
   }
 
+
+
+  document.getElementById('clearBtn').addEventListener('click',function(){
+    if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
+    setRows(5);
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      if(el.type==='checkbox'){ el.checked=false; }
+      else if(el.tagName==='SELECT'){ el.selectedIndex=0; }
+      else{ el.value=''; }
+    });
+    var t=document.getElementById('totalDisplay');
+    if(t) t.textContent='＿ 日 ＿ 時';
+    var st=document.getElementById('saveTime');
+    if(st) st.textContent='';
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+    showToast('已清除所有資料');
+  });
 
   document.addEventListener('change',function(e){
     if(!e.target.matches('[data-key]')) return;
