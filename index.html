@@ -677,6 +677,31 @@
       showToast('PDF 產生失敗，請改用「列印表單」');
     });
   });
+
+  function periodErrorCheck(){
+    function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
+    if(!v('sY')||!v('sM')||!v('sD')||!v('eY')||!v('eM')||!v('eD')) return;
+    var start=new Date(+v('sY'),+v('sM')-1,+v('sD'),+(v('sH')||'0'),+(v('sMin')||'0'));
+    var end=new Date(+v('eY'),+v('eM')-1,+v('eD'),+(v('eH')||'0'),+(v('eMin')||'0'));
+    if(isNaN(start)||isNaN(end)) return;
+    if(end<start) showToast('請注意：「結束時間」早於「開始時間」');
+  }
+
+
+  document.addEventListener('change',function(e){
+    if(!e.target.matches('[data-key]')) return;
+    if(e.target.type==='checkbox'){
+      var k=e.target.dataset.key;
+      var m=k.match(/^(c[0-9]+)_(fee1|fee2)$/);
+      if(m&&e.target.checked){
+        var other=document.querySelector('[data-key="'+m[1]+'_fee'+(m[2]==='fee1'?'2':'1')+'"]');
+        if(other) other.checked=false;
+      }
+    }
+    save();
+    if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); periodErrorCheck(); }
+  });
+
   setRows(5);
   load();
   save();
