@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新興國小｜教師請假課務／級務處理單（線上填寫）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#ffffff;
+    --ink:#1a1a1a;
+    --accent:#b3402e;
+    --accent-dark:#8e2f22;
+    --bg:#ede9e2;
+    --ui:#2b2b2b;
+    --muted:#7a7468;
+    --field:#fbf3e2;
+    --field-line:#d8c9a8;
+    --hair:#e3ded4;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC",sans-serif;
+    background:var(--bg);
+    color:var(--ui);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- 工具列 ---------- */
+  .toolbar{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:14px;
+    padding:12px 22px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--hair);
+  }
+  .seal{
+    width:42px;height:42px;flex:0 0 auto;
+    background:var(--accent);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Noto Serif TC",serif;font-weight:700;font-size:15px;
+    border-radius:7px;
+    box-shadow:0 2px 5px rgba(0,0,0,.18);
+    letter-spacing:.05em;
+  }
+  .toolbar .tt{display:flex;flex-direction:column;gap:1px;min-width:0}
+  .toolbar h1{margin:0;font-size:17px;font-weight:700;letter-spacing:.02em;white-space:nowrap}
+  .toolbar .sub{font-size:12px;color:var(--muted)}
+  .toolbar .spacer{flex:1}
+  .save-hint{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
+  .save-hint .dot{width:7px;height:7px;border-radius:50%;background:#c9c2b4}
+  .save-hint.saved .dot{background:#3f8f4f}
+  .btn{
+    font-family:inherit;font-size:14px;font-weight:700;
+    border:none;border-radius:8px;cursor:pointer;
+    padding:9px 16px;display:inline-flex;align-items:center;gap:6px;
+    transition:background .15s,transform .05s;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:#f2efe9;color:var(--ui)}
+  .btn.ghost:hover{background:#e7e2d8}
+  .btn.outline{background:#fff;color:var(--accent);border:1px solid var(--accent)}
+  .btn.outline:hover{background:#fdf1ee}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(179,64,46,.35)}
+  .btn.primary:hover{background:var(--accent-dark)}
+
+  /* ---------- 流程提示 ---------- */
+  .steps{
+    display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    padding:10px 22px;background:#fff;border-bottom:1px solid var(--hair);
+    font-size:13px;color:var(--muted);
+  }
+  .step{display:inline-flex;align-items:center;gap:7px}
+  .step .n{
+    width:20px;height:20px;border-radius:50%;
+    background:var(--ink);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;
+    font-size:11px;font-weight:700;flex:0 0 auto;
+  }
+  .step .arrow{color:#cfc7b8;font-weight:700}
+
+  /* ---------- 表單紙張 ---------- */
+  .sheet-wrap{padding:30px 20px 70px;display:flex;justify-content:center}
+  .form-sheet{
+    width:210mm;min-height:297mm;
+    background:var(--paper);color:var(--ink);
+    box-shadow:0 12px 34px rgba(0,0,0,.14);
+    padding:10mm 10mm 8mm;
+    font-family:"Noto Serif TC","PMingLiU","標楷體","DFKai-SB","SimSun",serif;
+    font-size:12.5px;line-height:1.6;
+  }
+
+  /* ---------- 表單通用 ---------- */
+  input[type=text],input[type=number],textarea,select{
+    font:inherit;color:inherit;
+    background:var(--field);
+    border:1px dashed var(--field-line);
+    border-radius:3px;
+    padding:2px 5px;
+    min-width:0;
+  }
+  select{padding:1px 3px}
+  input:focus,textarea:focus,select:focus{outline:2px solid rgba(179,64,46,.5);outline-offset:1px;background:#fff}
+  textarea{width:100%;resize:vertical}
+  table{border-collapse:collapse;width:100%}
+  .w2{width:2.4em}.w3{width:3.2em}.w4{width:4.2em}.w5{width:5.2em}.w6{width:6.4em}.w8{width:9em}
+  .cell-title{font-weight:700;margin-bottom:4px}
+
+  /* 勾選方塊 */
+  .ck{position:relative;display:inline-flex;align-items:center;gap:5px;cursor:pointer;user-select:none}
+  .ck input{position:absolute;opacity:0;width:0;height:0;margin:0}
+  .ck .box{
+    display:inline-flex;align-items:center;justify-content:center;
+    width:13px;height:13px;border:1px solid #000;background:#fff;
+    font-size:12px;line-height:1;flex:0 0 auto;
+  }
+  .ck input:checked ~ .box::after{content:"✓";font-weight:700}
+  .ck input:focus-visible ~ .box{outline:2px solid rgba(179,64,46,.6);outline-offset:1px}
+  .ck .txt{line-height:1.5}
+
+  /* ---------- 表頭 ---------- */
+  .form-top{text-align:center;margin-bottom:7px}
+  .form-top h1{
+    margin:0;font-size:19px;font-weight:700;letter-spacing:.05em;
+    white-space:nowrap;
+    display:inline-block;border-bottom:2px solid #000;padding-bottom:3px;
+  }
+  .top-meta{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin-top:5px;text-align:left;
+  }
+  .form-top .note{margin:0;font-size:11.5px;color:#333;text-align:left}
+  .form-no{font-size:12.5px;white-space:nowrap}
+  .form-no .line{display:inline-block;min-width:7em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
+
+  /* ---------- 第一區：基本資料 ---------- */
+  .t1{border:1.5px solid #000;margin-top:4px}
+  .t1 td{border:1px solid #000;padding:7px 9px;vertical-align:top}
+  .t1-sign{padding:0 !important;vertical-align:top;position:relative}
+  .t1-sign-inner{position:absolute;top:0;bottom:0;left:0;right:0;display:grid;grid-template-rows:2fr 1fr}
+  .t1-sign-upper{
+    display:flex;flex-direction:column;justify-content:space-between;
+    border-bottom:1px dashed #000;
+    padding:7px 9px 4px !important;
+    min-height:0;
+  }
+  .t1-sign-lower{padding:5px 9px !important;display:flex;align-items:center;min-height:0}
+  .t1-sign .sign-space{flex:1 1 0;min-height:24px}
+  .t1-sign .sign-note{font-size:11px;color:#444}
+  .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
+  .fill-date select{font-size:11.5px}
+  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px}
+  .type-grid .ck{line-height:1.5}
+  .t1-reason textarea{height:74px}
+
+  /* 請假期間一長欄（跨整頁寬度） */
+  .t1-period{padding:0 !important}
+  .t1p{width:100%;border-collapse:collapse}
+  .t1p td{border:none !important;padding:0 !important}
+  .t1p-label{
+    width:10%;text-align:center;font-weight:700;font-size:14px;
+    border-right:1px solid #000 !important;padding:7px 4px !important;
+  }
+  .t1p-main{padding:5px 12px !important;border-right:1px solid #000 !important}
+  .t1p-main .prow{white-space:nowrap;line-height:1.9}
+  .t1p-main select{padding:1px 2px;font-size:12px}
+  .t1p-total-label{
+    width:14%;text-align:center;font-weight:700;font-size:13px;
+    border-right:1px solid #000 !important;padding:7px 4px !important;
+  }
+  .t1p-total-value{
+    width:16%;text-align:center;font-size:13px;font-weight:600;
+    padding:7px 4px !important;letter-spacing:.02em;
+    vertical-align:middle !important;
+  }
+  .t1p-total-value #totalDisplay{display:inline-block}
+
+  /* ---------- 第二區：課務/級務處理 ---------- */
+  .sec-title{
+    margin:11px 0 5px;font-size:16.5px;font-weight:700;letter-spacing:.04em;
+    display:flex;align-items:center;gap:8px;
+  }
+  /* 分隔線已移除 */
+  .t2{border:1.5px solid #000}
+  .t2 td{border:1px solid #000;padding:7px 10px;vertical-align:top}
+  .t2-left{width:50%}
+  .star-hint{font-size:11.5px;color:#b3402e;font-weight:600;margin-bottom:4px}
+  .rules-ol{margin:0;padding-left:20px}
+  .rules-ol li{margin-bottom:4px}
+  .t2-right .opt{margin-bottom:5px}
+  .t2-right .opt .ck .txt{font-size:12.5px}
+  .duty-agent{margin-top:7px;font-size:12.5px;line-height:2;white-space:nowrap}
+  .duty-agent input[type="text"]{position:static;opacity:1;width:5em;height:auto;margin:0;background:var(--field);border:1px dashed var(--field-line);border-radius:3px;padding:2px 5px}
+  .duty-agent .sig-line{display:block;margin-left:18px;margin-top:2px;white-space:nowrap}
+  .duty-agent .sigline{display:inline-block;min-width:13.5em;border-bottom:1px solid #000;height:1.1em;vertical-align:bottom;margin-right:4px}
+
+  /* ---------- 第三區：課務明細表 ---------- */
+  .t3{border:1.5px solid #000}
+  .t3 th,.t3 td{border:1px solid #000;padding:4px 3px;text-align:center;vertical-align:middle}
+  .t3 th{background:#f4f0e6;font-weight:700;font-size:12px}
+  .t3 td input{width:100%;text-align:center;padding:2px 2px}
+  .t3 .ckcell{padding:3px}
+  .row-actions{margin-top:8px;display:flex;gap:8px;align-items:center}
+  .row-actions .tip{font-size:12px;color:var(--muted)}
+
+  /* ---------- 第四區：說明 ---------- */
+  .rules{border:1.5px solid #000;margin-top:11px;padding:7px 14px 9px}
+  .rules-title{font-weight:700;font-size:13px;margin-bottom:4px}
+  .rules ol{margin:0;padding-left:20px}
+  .rules li{margin-bottom:4px}
+  .rules .sub{
+    padding-left:2.6em;
+    text-indent:-2.6em;
+    margin:2px 0;
+  }
+
+  /* ---------- 第五區：核章 ---------- */
+  .stamp-row{display:flex;gap:0;border:1.5px solid #000;margin-top:11px}
+  .stamp-cell{flex:1;border-right:1px solid #000;padding:7px 14px;text-align:center}
+  .stamp-cell:last-child{border-right:none}
+  .stamp-title{font-size:14px;font-weight:700;letter-spacing:.2em}
+  .stamp-note{font-size:11px;color:#444;margin:2px 0 6px}
+  .stamp-space{height:38px;border-bottom:1px solid #000;margin:0 auto;max-width:64%}
+  .footer-note{text-align:center;font-size:11.5px;color:#333;margin-top:8px}
+
+  /* ---------- 列印 ---------- */
+  @media print{
+    @page{size:A4 portrait;margin:12mm}
+    html,body{background:#fff}
+    body{color:#000}
+    .toolbar,.steps,.row-actions,.auto-tag,.screen-only{display:none !important}
+    .sheet-wrap{padding:0;display:block}
+    .form-sheet{width:auto;min-height:0;box-shadow:none;padding:0;font-size:11.5px;line-height:1.4}
+    input[type=text],input[type=number],textarea,select{
+      background:transparent !important;border:none !important;border-radius:0;padding:0;
+      -webkit-appearance:none;appearance:none;
+    }
+    select{padding:0 1px !important}
+    .t3 th{background:#fff !important}
+    .save-hint{display:none}
+    .stamp-space{height:18px}
+    .t1-sign{min-height:0}
+    .t1-sign .sign-space{min-height:18px}
+    .t1 td{padding:4px 6px}
+    .t1-sign .sign-space{height:20px}
+    .type-grid{font-size:10.5px;gap:1px 6px}
+    .t1-reason textarea{height:50px}
+    .t1p-main .prow{line-height:1.55}
+    .t2 td{padding:4px 7px}
+    .t2-right .opt{margin-bottom:2px}
+    .rules-ol li{margin-bottom:2px}
+    .duty-agent{margin-top:4px;line-height:1.8}
+    .duty-agent input[type="text"]{position:static !important;opacity:1 !important;background:transparent !important;border:1px dashed #000 !important;width:5em;height:auto;padding:0}
+    .sec-title{margin:6px 0 2px;font-size:15px}
+    .t3 th,.t3 td{padding:1px 2px}
+    .t3 th{font-size:11px}
+    .rules{padding:3px 10px 5px;margin-top:6px}
+    .rules li{margin-bottom:2px}
+    .rules .sub{margin:1px 0}
+    .stamp-cell{padding:3px 10px}
+    .footer-note{margin-top:2px}
+    .form-top{margin-bottom:3px}
+    .form-top h1{font-size:17px}
+    .top-meta{margin-top:2px}
+  }
+</style>
+</head>
+<body>
+
+<header class="toolbar">
+  <div class="seal">新興</div>
+  <div class="tt">
+    <h1>教師請假課務／級務處理單</h1>
+    <div class="sub">高雄市新興區新興國民小學 · 線上填寫版</div>
+  </div>
+  <div class="spacer"></div>
+  <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存</span>
+  <button class="btn ghost" id="clearBtn">清除重填</button>
+  <button class="btn outline" id="addRow">＋ 新增課務列</button>
+  <button class="btn primary" id="printBtn">🖨 列印表單</button>
+</header>
+
+<div class="steps">
+  <span class="step"><span class="n">1</span>填寫請假資訊</span><span class="arrow">→</span>
+  <span class="step"><span class="n">2</span>新增課務列、填妥代課資料</span><span class="arrow">→</span>
+  <span class="step"><span class="n">3</span>按「列印表單」</span><span class="arrow">→</span>
+  <span class="step"><span class="n">4</span>手寫簽名後送教學組、教務主任核章</span>
+</div>
+
+<main class="sheet-wrap">
+  <div class="form-sheet">
+
+    <!-- 表頭 -->
+    <div class="form-top">
+      <h1>高雄市新興區新興國民小學【教師請假】課務／級務處理單</h1>
+      <div class="top-meta">
+        <p class="note">（本單請於線上差勤系統（WEBITR）送出假單後，請將本處理單送至教學組，若無課務免付）</p>
+        <div class="form-no">編號：<span class="line"></span></div>
+      </div>
+    </div>
+
+    <!-- 第一區：基本資料 -->
+    <table class="t1">
+      <tr>
+        <td class="t1-sign" style="width:26%">
+          <div class="t1-sign-inner">
+          <div class="t1-sign-upper">
+            <div class="cell-title">請假教師簽名</div>
+            <div class="sign-space"></div>
+            <div class="sign-note">（已確認線上送出假單，請簽名勿蓋章）</div>
+          </div>
+          <div class="t1-sign-lower">
+            <div class="fill-date">填寫日期：<select data-key="fillM"></select> 月 <select data-key="fillD"></select> 日</div>
+          </div>
+          </div>
+        </td>
+        <td class="t1-type" style="width:40%">
+          <div class="cell-title">假別（以下請勾選 V）</div>
+          <div class="type-grid">
+            <label class="ck"><input data-key="type1" type="checkbox"><span class="box"></span><span class="txt">出差（派代，請檢附公文或簽案依據）</span></label>
+            <label class="ck"><input data-key="type2" type="checkbox"><span class="box"></span><span class="txt">公假（派代，請檢附公文或簽案依據）</span></label>
+            <label class="ck"><input data-key="type3" type="checkbox"><span class="box"></span><span class="txt">婚假（派代，請檢附證明）</span></label>
+            <label class="ck"><input data-key="type4" type="checkbox"><span class="box"></span><span class="txt">喪假（派代，請檢附證明）</span></label>
+            <label class="ck"><input data-key="type5" type="checkbox"><span class="box"></span><span class="txt">三日以上病假（派代，請檢附證明）</span></label>
+            <label class="ck"><input data-key="type6" type="checkbox"><span class="box"></span><span class="txt">事假（身心調適假）（課務派代）</span></label>
+            <label class="ck"><input data-key="type7" type="checkbox"><span class="box"></span><span class="txt">事假（家庭照顧假）（課務自理）</span></label>
+            <label class="ck"><input data-key="type8" type="checkbox"><span class="box"></span><span class="txt">事假（課務自理）</span></label>
+            <label class="ck"><input data-key="type9" type="checkbox"><span class="box"></span><span class="txt">休假（課務自理）</span></label>
+            <label class="ck"><input data-key="type10" type="checkbox"><span class="box"></span><span class="txt">補休假（課務自理）</span></label>
+            <label class="ck"><input data-key="type11" type="checkbox"><span class="box"></span><span class="txt">病假或生理假（課務自理）</span></label>
+            <label class="ck"><input data-key="type12" type="checkbox"><span class="box"></span><span class="txt">其他（<input data-key="typeOther" class="w6" type="text">）</span></label>
+          </div>
+        </td>
+        <td class="t1-reason">
+          <div class="cell-title">請假事由</div>
+          <textarea data-key="reason" placeholder="請簡述請假事由…"></textarea>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="3" class="t1-period">
+          <table class="t1p">
+            <tr>
+              <td class="t1p-label">請假期間</td>
+              <td class="t1p-main">
+                <div class="prow">自 <select data-key="sY"></select> 年 <select data-key="sM"></select> 月 <select data-key="sD"></select> 日 <select data-key="sH"></select> 時 <select data-key="sMin"></select> 分 起</div>
+                <div class="prow">至 <select data-key="eY"></select> 年 <select data-key="eM"></select> 月 <select data-key="eD"></select> 日 <select data-key="eH"></select> 時 <select data-key="eMin"></select> 分 止</div>
+              </td>
+              <td class="t1p-total-label">日（時）數<br>共計</td>
+              <td class="t1p-total-value"><span id="totalDisplay">＿ 日 ＿ 時</span></td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 第二區：課務/級務處理 -->
+    <div class="sec-title">課務／級務處理</div>
+    <table class="t2">
+      <tr>
+        <td class="t2-left">
+          <div class="star-hint">★下表雙線欄位部分請自行填妥。</div>
+          <ol class="rules-ol">
+            <li>教師請假一日者（日薪支付），其課務及級務均由當日聘任之代理教師擔任。</li>
+            <li>教師請假以小時計者（鐘點費支付），代課教師僅負責課務，級務部分仍需由請假教師<strong>自行尋覓校內教師</strong>代理。</li>
+            <li>需代課之原課務（請自行填妥）</li>
+          </ol>
+        </td>
+        <td class="t2-right">
+          <div class="cell-title">課務／級務處理方式《請參閱說明》</div>
+          <div class="opt"><label class="ck"><input data-key="opt1" type="checkbox"><span class="box"></span><span class="txt">由教務處代為處理排課事宜</span></label></div>
+          <div class="opt"><label class="ck"><input data-key="opt2" type="checkbox"><span class="box"></span><span class="txt">部分課程以代課教師代理</span></label></div>
+          <div class="opt"><label class="ck"><input data-key="opt3" type="checkbox"><span class="box"></span><span class="txt">部分以調課處理，另填寫調課單</span></label></div>
+          <div class="opt duty-agent">
+            <label class="ck"><input data-key="opt4" type="checkbox"><span class="box"></span><span class="txt"><strong>晨光、午餐、午休及下課級務代理人：</strong><input data-key="dutyAgent" type="text"></span></label>
+            <div class="sig-line"><span class="sigline"></span>請代理人親簽</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <!-- 第三區：課務明細表 -->
+    <div class="sec-title">需代課之課務明細</div>
+    <table class="t3">
+      <colgroup>
+        <col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:19%">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目（整日請寫包班）</th><th>鐘點費由總務處轉</th><th>鐘點費自理</th><th>鐘點費或日薪金額</th><th>代理（課）教師簽名</th>
+        </tr>
+      </thead>
+      <tbody id="courseBody"></tbody>
+    </table>
+    <div class="row-actions screen-only">
+      <button class="btn outline" id="addRow2">＋ 新增課務列</button>
+      <span class="tip">說明第 3 點：課務處理欄位若不敷使用得自行增列。</span>
+    </div>
+
+    <!-- 第四區：說明 -->
+    <div class="rules">
+      <div class="rules-title">說明</div>
+      <ol>
+        <li>請假應先至線上差勤系統（WEBITR）填送請假或公（差）假申請，所遺課務應另填本「課務處理單」。</li>
+        <li>根據教師請假規則及教育部相關法規函釋，本處彙整並擬定教師請假課務處理原則如下：
+          <div class="sub">（1）<strong>出差、公假（教務處派代）</strong>：經來函薦派、必派員參加者，得採自行調課、課務自理或教務處派代之方式處理。</div>
+          <div class="sub">（2）<strong>出差、公假（課務自理）</strong>：非來函指定，為自發性參加研習或相關活動者，應採自行調課、課務自理之方式處理，鐘點費請自付。</div>
+          <div class="sub">（3）<strong>其他假別</strong>：依教師請假規則辦理。</div>
+        </li>
+        <li>課務處理欄位若不敷使用得自行增列。</li>
+        <li>本課務處理單經主管會議通過，呈請校長核可後實施。</li>
+      </ol>
+    </div>
+
+    <!-- 第五區：核章 -->
+    <div class="stamp-row">
+      <div class="stamp-cell">
+        <div class="stamp-title">教學組長</div>
+        <div class="stamp-note">（確認申請人所遺課務已處理）</div>
+        <div class="stamp-space"></div>
+      </div>
+      <div class="stamp-cell">
+        <div class="stamp-title">教務主任</div>
+        <div class="stamp-note">（確認前項程序都已完備）</div>
+        <div class="stamp-space"></div>
+      </div>
+    </div>
+    <div class="footer-note">每月計算代課教師鐘點費之際，請檢附本表單佐證併同憑證核銷歸檔。</div>
+
+  </div>
+</main>
+
+<script>
+(function(){
+  var STORE_KEY='xinxing-leave-form-v1';
+  var courseBody=document.getElementById('courseBody');
+  var PERIOD_KEYS=['sY','sM','sD','sH','sMin','eY','eM','eD','eH','eMin'];
+
+  /* ---- 下拉式選單選項 ---- */
+  function fillSelect(sel, opts, ph){
+    if(!sel) return;
+    sel.innerHTML='';
+    var p=document.createElement('option');
+    p.value=''; p.textContent=ph||''; sel.appendChild(p);
+    opts.forEach(function(o){
+      var op=document.createElement('option');
+      op.value=String(o); op.textContent=String(o); sel.appendChild(op);
+    });
+  }
+  function range(a,b){var r=[];for(var i=a;i<=b;i++){r.push(i);}return r;}
+  var now=new Date().getFullYear();
+  var YEARS=range(now-1,now+3);
+  var MONTHS=range(1,12);
+  var DAYS=range(1,31);
+  var HOURS=range(0,23);
+  var MINS=range(0,59);
+  ['fillM'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MONTHS,'月');});
+  ['fillD'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),DAYS,'日');});
+  ['sY','eY'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),YEARS,'年');});
+  ['sM','eM'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MONTHS,'月');});
+  ['sD','eD'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),DAYS,'日');});
+  ['sH','eH'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),HOURS,'時');});
+  ['sMin','eMin'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MINS,'分');});
+
+  /* ---- 課務明細列 ---- */
+  function rowHtml(i){
+    return '<tr>'
+      +'<td><input data-key="c'+i+'_m" type="text"></td>'
+      +'<td><input data-key="c'+i+'_d" type="text"></td>'
+      +'<td><input data-key="c'+i+'_w" type="text"></td>'
+      +'<td><input data-key="c'+i+'_period" type="text"></td>'
+      +'<td><input data-key="c'+i+'_class" type="text"></td>'
+      +'<td><input data-key="c'+i+'_subj" type="text"></td>'
+      +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee1" type="checkbox"><span class="box"></span></label></td>'
+      +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee2" type="checkbox"><span class="box"></span></label></td>'
+      +'<td><input data-key="c'+i+'_amt" type="text"></td>'
+      +'<td><input data-key="c'+i+'_teacher" type="text"></td>'
+      +'</tr>';
+  }
+  function setRows(n){
+    courseBody.innerHTML='';
+    for(var i=0;i<n;i++){ courseBody.insertAdjacentHTML('beforeend',rowHtml(i)); }
+  }
+
+  /* ---- 儲存 / 讀取 ---- */
+  function collect(){
+    var data={rows:courseBody.children.length};
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      if(el.type==='checkbox'){ data[el.dataset.key]=el.checked; }
+      else{ data[el.dataset.key]=el.value; }
+    });
+    return data;
+  }
+  function save(){
+    try{ localStorage.setItem(STORE_KEY,JSON.stringify(collect())); }catch(e){}
+    var h=document.getElementById('saveHint');
+    h.classList.add('saved');
+    clearTimeout(h._t);
+    h._t=setTimeout(function(){ h.classList.remove('saved'); },1200);
+  }
+  function load(){
+    var data=null;
+    try{ data=JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){}
+    if(!data) return;
+    var rows=parseInt(data.rows,10);
+    setRows(isNaN(rows)||rows<1?5:rows);
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      if(!(el.dataset.key in data)) return;
+      if(el.type==='checkbox'){ el.checked=!!data[el.dataset.key]; }
+      else{ el.value=data[el.dataset.key]==null?'':data[el.dataset.key]; }
+    });
+  }
+
+  /* ---- 自動計算日(時)數 ---- */
+  function computeTotal(){
+    function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
+    var sY=v('sY'),sM=v('sM'),sD=v('sD'),sH=v('sH')||'0',sMin=v('sMin')||'0';
+    var eY=v('eY'),eM=v('eM'),eD=v('eD'),eH=v('eH')||'0',eMin=v('eMin')||'0';
+    var disp=document.getElementById('totalDisplay');
+    if(!sY||!sM||!sD||!eY||!eM||!eD){ disp.textContent='＿ 日 ＿ 時'; return; }
+    var start=new Date(+sY,+sM-1,+sD,+sH,+sMin);
+    var end=new Date(+eY,+eM-1,+eD,+eH,+eMin);
+    if(isNaN(start)||isNaN(end)){ disp.textContent='＿ 日 ＿ 時'; return; }
+    var hrs=(end-start)/3600000;
+    if(hrs<0) hrs=0;
+    var days=Math.floor(hrs/24);
+    var rem=Math.round((hrs-days*24)*10)/10;
+    disp.textContent=days+' 日 '+rem+' 時';
+  }
+
+  function addRow(){
+    courseBody.insertAdjacentHTML('beforeend',rowHtml(courseBody.children.length));
+    save();
+  }
+
+  document.getElementById('addRow').addEventListener('click',addRow);
+  document.getElementById('addRow2').addEventListener('click',addRow);
+  document.getElementById('printBtn').addEventListener('click',function(){ save(); window.print(); });
+  document.getElementById('clearBtn').addEventListener('click',function(){
+    if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
+    setRows(5);
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      if(el.type==='checkbox'){ el.checked=false; }
+      else{ el.value=''; }
+    });
+    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
+  });
+
+  document.addEventListener('input',function(e){
+    if(e.target.matches('[data-key]')){
+      save();
+      if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); }
+    }
+  });
+  document.addEventListener('change',function(e){
+    if(e.target.matches('[data-key]')){
+      save();
+      if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); }
+    }
+  });
+
+  setRows(5);
+  load();
+})();
+</script>
+</body>
+</html>
