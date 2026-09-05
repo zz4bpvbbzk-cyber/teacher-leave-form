@@ -54,6 +54,17 @@
   .save-hint{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px;white-space:nowrap}
   .save-hint .dot{width:7px;height:7px;border-radius:50%;background:#c9c2b4}
   .save-hint.saved .dot{background:#3f8f4f}
+
+  /* 提示訊息 */
+  .toast{
+    position:fixed;top:70px;left:50%;transform:translateX(-50%);
+    background:#b3402e;color:#fff;font-size:14px;font-weight:600;
+    padding:12px 22px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);
+    z-index:9999;display:none;max-width:90vw;text-align:center;line-height:1.6;
+  }
+  .toast.show{display:block;animation:toastIn .25s ease}
+  @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
   .btn{
     font-family:inherit;font-size:14px;font-weight:700;
     border:none;border-radius:8px;cursor:pointer;
@@ -271,6 +282,7 @@
 </head>
 <body>
 
+<div class="toast" id="toast"></div>
 <header class="toolbar">
   <div class="seal">新興</div>
   <div class="tt">
@@ -538,7 +550,27 @@
 
   document.getElementById('addRow').addEventListener('click',addRow);
   document.getElementById('addRow2').addEventListener('click',addRow);
-  document.getElementById('printBtn').addEventListener('click',function(){ save(); window.print(); });
+  function showToast(msg){
+    var t=document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    clearTimeout(t._t);
+    t._t=setTimeout(function(){ t.classList.remove('show'); },3500);
+  }
+  function validateChecks(){
+    var leaveKeys=['type1','type2','type3','type4','type5','type6','type7','type8','type9','type10','type11','type12'];
+    var optKeys=['opt1','opt2','opt3','opt4'];
+    function any(keys){ return keys.some(function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el&&el.checked; }); }
+    return {leave:any(leaveKeys), opt:any(optKeys)};
+  }
+  document.getElementById('printBtn').addEventListener('click',function(){
+    save();
+    var v=validateChecks();
+    var msgs=[];
+    if(!v.leave) msgs.push('請在「假別」至少勾選一項');
+    if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
+    if(msgs.length){ showToast(msgs.join('，')); return; }
+    window.print();
+  });
   document.getElementById('clearBtn').addEventListener('click',function(){
     if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
     setRows(5);
