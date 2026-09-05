@@ -293,7 +293,7 @@
     <div class="sub">高雄市新興區新興國民小學 · 線上填寫版</div>
   </div>
   <div class="spacer"></div>
-  <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存</span>
+  <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存<span id="saveTime"></span></span>
   <button class="btn ghost" id="clearBtn">清除重填</button>
   <button class="btn outline" id="addRow">＋ 新增課務列</button>
   <button class="btn primary" id="printBtn">🖨 列印表單</button>
@@ -516,6 +516,11 @@
     h.classList.add('saved');
     clearTimeout(h._t);
     h._t=setTimeout(function(){ h.classList.remove('saved'); },1200);
+    var st=document.getElementById('saveTime');
+    if(st){
+      var d=new Date();
+      st.textContent='（上次儲存 '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2)+'）';
+    }
   }
   function load(){
     var data=null;
@@ -597,6 +602,8 @@
     if(msgs.length){ showToast(msgs.join('，')); return; }
     window.print();
   });
+  window.addEventListener('beforeunload',save);
+  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'){ save(); } });
   document.getElementById('clearBtn').addEventListener('click',function(){
     if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
     setRows(5);
@@ -635,6 +642,7 @@
 
   setRows(5);
   load();
+  save();
 })();
 </script>
 </body>
