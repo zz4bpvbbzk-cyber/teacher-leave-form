@@ -402,7 +402,7 @@
       </colgroup>
       <thead>
         <tr>
-          <th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目（整日請寫包班）</th><th>鐘點費由總務處轉</th><th>鐘點費自理</th><th>鐘點費或日薪金額</th><th>代理（課）教師簽名</th>
+          <th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目<br>（整日請寫包班）</th><th>鐘點費<br>由總務處轉</th><th>鐘點費<br>自理</th><th>鐘點費或日薪金額</th><th>代理（課）<br>教師簽名</th>
         </tr>
       </thead>
       <tbody id="courseBody"></tbody>
@@ -489,7 +489,7 @@
       +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee1" type="checkbox"><span class="box"></span></label></td>'
       +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee2" type="checkbox"><span class="box"></span></label></td>'
       +'<td><input data-key="c'+i+'_amt" type="text"></td>'
-      +'<td><input data-key="c'+i+'_teacher" type="text"></td>'
+      +'<td class="sig-cell"></td>'
       +'</tr>';
   }
   function setRows(n){
@@ -560,7 +560,14 @@
     var leaveKeys=['type1','type2','type3','type4','type5','type6','type7','type8','type9','type10','type11','type12'];
     var optKeys=['opt1','opt2','opt3','opt4'];
     function any(keys){ return keys.some(function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el&&el.checked; }); }
-    return {leave:any(leaveKeys), opt:any(optKeys)};
+    var rows=courseBody.children.length;
+    var feeOk=true, feeRows=[];
+    for(var i=0;i<rows;i++){
+      var f1=document.querySelector('[data-key="c'+i+'_fee1"]');
+      var f2=document.querySelector('[data-key="c'+i+'_fee2"]');
+      if(f1&&f2&&!f1.checked&&!f2.checked){ feeOk=false; feeRows.push(i+1); }
+    }
+    return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows};
   }
   document.getElementById('printBtn').addEventListener('click',function(){
     save();
@@ -568,6 +575,7 @@
     var msgs=[];
     if(!v.leave) msgs.push('請在「假別」至少勾選一項');
     if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
+    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請至少勾選一項');
     if(msgs.length){ showToast(msgs.join('，')); return; }
     window.print();
   });
