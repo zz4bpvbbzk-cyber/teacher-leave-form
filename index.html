@@ -296,11 +296,13 @@
 
   /* PDF 預覽 Modal */
   .pdf-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
-  .pdf-modal-box{background:#fff;border-radius:12px;padding:22px;max-width:660px;width:100%;max-height:92vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:auto}
+  .pdf-modal-box{background:#fff;border-radius:12px;padding:22px;max-width:820px;width:100%;max-height:94vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:auto}
   .pdf-modal-box h3{margin:0;font-size:18px}
   .pdf-modal-box p{margin:0;color:#555;font-size:13px}
   .pdf-preview-wrap{flex:1;overflow:auto;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;padding:8px;display:flex;justify-content:center}
-  .pdf-preview-wrap img{max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .pdf-preview-wrap.zoomed{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:10001;display:flex;align-items:center;justify-content:center;padding:10px}
+  .pdf-preview-wrap.zoomed img{max-width:96vw;max-height:94vh;cursor:zoom-out;box-shadow:none}
+  .pdf-preview-wrap img{max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:zoom-in}
   .pdf-modal-actions{display:flex;justify-content:flex-end;gap:10px}
   @media print{.pdf-modal{display:none !important}}
 
@@ -681,6 +683,12 @@
   function showPreview(imgData,doc){
     pendingDoc=doc;
     document.getElementById('pdfImg').src=imgData;
+  var pw=document.querySelector('.pdf-preview-wrap');
+  if(pw) pw.classList.remove('zoomed');
+  document.getElementById('pdfImg').onclick=function(){
+    pw.classList.toggle('zoomed');
+    pw.scrollTop=0;
+  };
     document.getElementById('pdfProg').textContent='已產生 PDF 預覽，請確認內容正確無誤後再下載。';
     document.getElementById('pdfModal').style.display='flex';
   }
@@ -710,13 +718,18 @@
     var fontReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
     fontReady.then(function(){ return new Promise(function(r){ setTimeout(r,400); }); })
     .then(function(){
-      return html2canvas(document.querySelector('.form-sheet'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+      return html2canvas(document.querySelector('.form-sheet'),{scale:3,useCORS:true,backgroundColor:'#ffffff'});
     })
     .then(function(canvas){
       var img=canvas.toDataURL('image/png');
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-      var ih=210*canvas.height/canvas.width;
-      doc.addImage(img,'PNG',0,0,210,Math.min(ih,297));
+      var imgW=canvas.width, imgH=canvas.height;
+      // 等比縮放至 A4 可用範圍（四周留 10mm 邊）
+      var availW=210-20, availH=297-20;
+      var k=Math.min(availW/imgW, availH/imgH);
+      var w=imgW*k, h=imgH*k;
+      var x=(210-w)/2, y=(297-h)/2;
+      doc.addImage(img,'PNG',x,y,w,h);
       body.classList.remove('pdf-capture');
       showPreview(img,doc);
     })
