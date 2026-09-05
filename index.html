@@ -7,6 +7,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <style>
   :root{
     --paper:#ffffff;
@@ -78,6 +80,8 @@
   .btn.outline:hover{background:#fdf1ee}
   .btn.primary{background:var(--accent);color:#fff;box-shadow:0 2px 6px rgba(179,64,46,.35)}
   .btn.primary:hover{background:var(--accent-dark)}
+  .btn.ink{background:#2b2b2b;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+  .btn.ink:hover{background:#111}
 
   /* ---------- 流程提示 ---------- */
   .steps{
@@ -281,6 +285,14 @@
     .form-top h1{font-size:17px}
     .top-meta{margin-top:2px}
   }
+
+  /* PDF 擷取模式（等同列印樣式） */
+  .pdf-capture .form-sheet{width:210mm;min-height:0;box-shadow:none;padding:0;font-size:11.5px;line-height:1.4;background:#fff}
+  .pdf-capture input[type=text],.pdf-capture input[type=number],.pdf-capture textarea,.pdf-capture select{background:transparent !important;border:none !important;border-radius:0;padding:0;-webkit-appearance:none;appearance:none}
+  .pdf-capture .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
+  .pdf-capture .duty-agent input[type="text"]{background:transparent !important;border:1px dashed #000 !important;width:5em;padding:0}
+  .pdf-capture .t3 th{background:#fff !important}
+  .pdf-capture .stamp-space{height:18px}
 </style>
 </head>
 <body>
@@ -297,6 +309,7 @@
   <button class="btn ghost" id="clearBtn">清除重填</button>
   <button class="btn outline" id="addRow">＋ 新增課務列</button>
   <button class="btn primary" id="printBtn">🖨 列印表單</button>
+  <button class="btn ink" id="pdfBtn">⬇ 下載 PDF</button>
 </header>
 
 <div class="steps">
@@ -640,6 +653,39 @@
     }
   });
 
+  document.getElementById('pdfBtn').addEventListener('click',function(){
+    save();
+    var v=validateChecks();
+    var msgs=[];
+    if(!v.tnOk) msgs.push('請填寫「請假教師」姓名');
+    if(v.period===false) msgs.push('請假期間「結束時間」不能早於「開始時間」');
+    if(!v.leave) msgs.push('請在「假別」至少勾選一項');
+    if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
+    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請至少勾選一項');
+    if(msgs.length){ showToast(msgs.join('，')); return; }
+    if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){ showToast('PDF 功能載入中，請稍候再試'); return; }
+    showToast('正在產生 PDF…');
+    var body=document.body;
+    body.classList.add('pdf-capture');
+    var fontReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
+    fontReady.then(function(){ return new Promise(function(r){ setTimeout(r,400); }); })
+    .then(function(){
+      return html2canvas(document.querySelector('.form-sheet'),{scale:2,useCORS:true,backgroundColor:'#ffffff'});
+    })
+    .then(function(canvas){
+      var img=canvas.toDataURL('image/png');
+      var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+      var ih=210*canvas.height/canvas.width;
+      doc.addImage(img,'PNG',0,0,210,Math.min(ih,297));
+      body.classList.remove('pdf-capture');
+      doc.save('教師請假課務處理單.pdf');
+      showToast('PDF 已產生');
+    })
+    .catch(function(){
+      body.classList.remove('pdf-capture');
+      showToast('PDF 產生失敗，請改用「列印表單」');
+    });
+  });
   setRows(5);
   load();
   save();
