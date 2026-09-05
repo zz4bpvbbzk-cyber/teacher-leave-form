@@ -293,11 +293,32 @@
   .pdf-capture .duty-agent input[type="text"]{background:transparent !important;border:1px dashed #000 !important;width:5em;padding:0}
   .pdf-capture .t3 th{background:#fff !important}
   .pdf-capture .stamp-space{height:18px}
+
+  /* PDF 預覽 Modal */
+  .pdf-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
+  .pdf-modal-box{background:#fff;border-radius:12px;padding:22px;max-width:660px;width:100%;max-height:92vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:auto}
+  .pdf-modal-box h3{margin:0;font-size:18px}
+  .pdf-modal-box p{margin:0;color:#555;font-size:13px}
+  .pdf-preview-wrap{flex:1;overflow:auto;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;padding:8px;display:flex;justify-content:center}
+  .pdf-preview-wrap img{max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .pdf-modal-actions{display:flex;justify-content:flex-end;gap:10px}
+  @media print{.pdf-modal{display:none !important}}
 </style>
 </head>
 <body>
 
 <div class="toast" id="toast"></div>
+<div class="pdf-modal" id="pdfModal" style="display:none">
+  <div class="pdf-modal-box">
+    <h3>PDF 預覽</h3>
+    <p id="pdfProg">請確認表單內容正確無誤後，再下載。</p>
+    <div class="pdf-preview-wrap"><img id="pdfImg" alt="PDF 預覽"></div>
+    <div class="pdf-modal-actions">
+      <button class="btn ghost" id="pdfCancel">取消</button>
+      <button class="btn primary" id="pdfConfirm">確認下載</button>
+    </div>
+  </div>
+</div>
 <header class="toolbar">
   <div class="seal">新興</div>
   <div class="tt">
@@ -308,7 +329,7 @@
   <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存<span id="saveTime"></span></span>
   <button class="btn ghost" id="clearBtn">清除重填</button>
   <button class="btn outline" id="addRow">＋ 新增課務列</button>
-  <button class="btn primary" id="printBtn">🖨 列印表單</button>
+  
   <button class="btn ink" id="pdfBtn">⬇ 下載 PDF</button>
 </header>
 
@@ -317,7 +338,7 @@
   <span class="step"><span class="n">2</span>新增課務列、填妥代課資料</span><span class="arrow">→</span>
   <span class="step"><span class="n">3</span>按「列印表單」</span><span class="arrow">→</span>
   <span class="step"><span class="n">4</span>手寫簽名後送教學組、教務主任核章</span>
-  <span class="step print-tip">💡 列印時請取消勾選「頁首／頁尾」，避免出現網址</span>
+  
 </div>
 
 <main class="sheet-wrap">
@@ -589,7 +610,12 @@
     for(var i=0;i<rows;i++){
       var f1=document.querySelector('[data-key="c'+i+'_fee1"]');
       var f2=document.querySelector('[data-key="c'+i+'_fee2"]');
-      if(f1&&f2&&!f1.checked&&!f2.checked){ feeOk=false; feeRows.push(i+1); }
+      var hasData=false;
+      ['m','d','w','period','class','subj','amt'].forEach(function(sfx){
+        var el=document.querySelector('[data-key="c'+i+'_'+sfx+'"]');
+        if(el && el.value.trim()!=='') hasData=true;
+      });
+      if(f1&&f2&&hasData&&f1.checked===f2.checked){ feeOk=false; feeRows.push(i+1); }
     }
     function periodOk(){
       function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
@@ -603,56 +629,22 @@
     }
     return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk, period: periodOk()};
   }
-  document.getElementById('printBtn').addEventListener('click',function(){
-    save();
-    var v=validateChecks();
-    var msgs=[];
-    if(!v.leave) msgs.push('請在「假別」至少勾選一項');
-    if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
-    if(!v.tnOk) msgs.push('請填寫「請假教師」姓名');
-    if(v.period===false) msgs.push('請假期間「結束時間」不能早於「開始時間」');
-    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請至少勾選一項');
-    if(msgs.length){ showToast(msgs.join('，')); return; }
-    window.print();
-  });
-  window.addEventListener('beforeunload',save);
-  document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden'){ save(); } });
-  document.getElementById('clearBtn').addEventListener('click',function(){
-    if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
-    setRows(5);
-    document.querySelectorAll('[data-key]').forEach(function(el){
-      if(el.type==='checkbox'){ el.checked=false; }
-      else{ el.value=''; }
-    });
-    try{ localStorage.removeItem(STORE_KEY); }catch(e){}
-  });
-
-  document.addEventListener('input',function(e){
-    if(e.target.matches('[data-key]')){
-      save();
-      if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); }
-    }
-  });
-  function periodErrorCheck(){
-    function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
-    if(!v('sY')||!v('sM')||!v('sD')||!v('eY')||!v('eM')||!v('eD')) return;
-    var start=new Date(+v('sY'),+v('sM')-1,+v('sD'),+(v('sH')||'0'),+(v('sMin')||'0'));
-    var end=new Date(+v('eY'),+v('eM')-1,+v('eD'),+(v('eH')||'0'),+(v('eMin')||'0'));
-    if(isNaN(start)||isNaN(end)) return;
-    if(end<start) showToast('請注意：「結束時間」早於「開始時間」');
+  var pendingDoc=null;
+  function showPreview(imgData,doc){
+    pendingDoc=doc;
+    document.getElementById('pdfImg').src=imgData;
+    document.getElementById('pdfProg').textContent='已產生 PDF 預覽，請確認內容正確無誤後再下載。';
+    document.getElementById('pdfModal').style.display='flex';
   }
-  document.addEventListener('change',function(e){
-    if(e.target.matches('[data-key]')){
-      save();
-      if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); periodErrorCheck(); }
-    }
+  document.getElementById('pdfConfirm').addEventListener('click',function(){
+    if(pendingDoc){ pendingDoc.save('教師請假課務處理單.pdf'); }
+    document.getElementById('pdfModal').style.display='none';
+    showToast('PDF 已下載');
   });
-  document.addEventListener('input',function(e){
-    if(e.target.matches('[data-key]')){
-      if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ periodErrorCheck(); }
-    }
+  document.getElementById('pdfCancel').addEventListener('click',function(){
+    document.getElementById('pdfModal').style.display='none';
+    showToast('已取消下載');
   });
-
   document.getElementById('pdfBtn').addEventListener('click',function(){
     save();
     var v=validateChecks();
@@ -661,7 +653,7 @@
     if(v.period===false) msgs.push('請假期間「結束時間」不能早於「開始時間」');
     if(!v.leave) msgs.push('請在「假別」至少勾選一項');
     if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
-    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請至少勾選一項');
+    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請擇一勾選');
     if(msgs.length){ showToast(msgs.join('，')); return; }
     if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){ showToast('PDF 功能載入中，請稍候再試'); return; }
     showToast('正在產生 PDF…');
@@ -678,8 +670,7 @@
       var ih=210*canvas.height/canvas.width;
       doc.addImage(img,'PNG',0,0,210,Math.min(ih,297));
       body.classList.remove('pdf-capture');
-      doc.save('教師請假課務處理單.pdf');
-      showToast('PDF 已產生');
+      showPreview(img,doc);
     })
     .catch(function(){
       body.classList.remove('pdf-capture');
