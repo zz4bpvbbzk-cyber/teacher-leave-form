@@ -93,6 +93,7 @@
     font-size:11px;font-weight:700;flex:0 0 auto;
   }
   .step .arrow{color:#cfc7b8;font-weight:700}
+  .print-tip{color:#b3402e;font-weight:600}
 
   /* ---------- 表單紙張 ---------- */
   .sheet-wrap{padding:30px 20px 70px;display:flex;justify-content:center}
@@ -161,7 +162,7 @@
   }
   .t1-sign-lower{padding:5px 9px !important;display:flex;align-items:center;min-height:0}
   .t1-sign .sign-space{flex:1 1 0;min-height:24px}
-  .t1-sign .sign-note{font-size:11px;color:#444}
+  .t1-sign .sign-note{font-size:11px;color:#444;white-space:nowrap}
   .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
   .fill-date select{font-size:11.5px}
   .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px}
@@ -301,6 +302,7 @@
   <span class="step"><span class="n">2</span>新增課務列、填妥代課資料</span><span class="arrow">→</span>
   <span class="step"><span class="n">3</span>按「列印表單」</span><span class="arrow">→</span>
   <span class="step"><span class="n">4</span>手寫簽名後送教學組、教務主任核章</span>
+  <span class="step print-tip">💡 列印時請取消勾選「頁首／頁尾」，避免出現網址</span>
 </div>
 
 <main class="sheet-wrap">
@@ -318,7 +320,7 @@
     <!-- 第一區：基本資料 -->
     <table class="t1">
       <tr>
-        <td class="t1-sign" style="width:26%">
+        <td class="t1-sign" style="width:30%">
           <div class="t1-sign-inner">
           <div class="t1-sign-upper">
             <div class="cell-title">請假教師簽名</div>
