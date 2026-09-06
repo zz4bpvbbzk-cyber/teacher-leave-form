@@ -867,19 +867,37 @@
   });
   document.getElementById('pdfConfirm').addEventListener('click',function(){
     if(pendingDoc){
-      var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-      if(isMobile){
-        // 手機：直接開啟 PDF（系統檢視器）→ 可用「分享」或「儲存到檔案」存放，一定看得到
-        try{
+      var filename='教師請假課務處理單.pdf';
+      var isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent);
+      var isAndroid=/Android/i.test(navigator.userAgent);
+      try{
+        if(isIOS){
+          // iOS Safari：必須用 data: + 隱藏 <a download> 觸發（Blob URL+_blank 會出現 WebKitBlobResource 錯誤）
+          var dataUri=pendingDoc.output('datauristring');
+          var a=document.createElement('a');
+          a.href=dataUri; a.download=filename;
+          a.target='_blank'; a.rel='noopener';
+          document.body.appendChild(a); a.click();
+          setTimeout(function(){ try{ document.body.removeChild(a); }catch(_){ } },500);
+          showToast('iPhone 請按畫面頂端的「下載」圖示，或直接點連結以「儲存到檔案」/「分享」');
+        }else if(isAndroid){
+          // Android Chrome：Blob URL 直接下載（檔案管理員 > 下載資料夾）
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
-          window.open(url,'_blank');
-          setTimeout(function(){ try{URL.revokeObjectURL(url);}catch(_){} },60000);
-          showToast('PDF 已開啟，請用畫面中的「分享」鈕儲存或傳送');
-        }catch(_){ pendingDoc.save('教師請假課務處理單.pdf'); showToast('已產生 PDF，請至「下載」資料夾查看'); }
-      }else{
-        pendingDoc.save('教師請假課務處理單.pdf');
-        showToast('PDF 已下載，請至「下載」資料夾查看');
+          var a=document.createElement('a');
+          a.href=url; a.download=filename; a.style.display='none';
+          document.body.appendChild(a); a.click();
+          setTimeout(function(){ try{URL.revokeObjectURL(url); document.body.removeChild(a);}catch(_){ } },2000);
+          showToast('Android PDF 已下載，請至「下載」資料夾查看，或從右上角工具列下載歷史開啟');
+        }else{
+          // 電腦：保留原行為
+          pendingDoc.save(filename);
+          showToast('PDF 已下載，請至「下載」資料夾查看');
+        }
+      }catch(e){
+        // 全部失敗時的保險降級：仍嘗試 jsPDF 內建下載
+        try{ pendingDoc.save(filename); }catch(_){}
+        showToast('已嘗試下載 PDF；若無出現，請至瀏覽器「下載」歷史查看');
       }
     }
     document.getElementById('pdfModal').style.display='none';
