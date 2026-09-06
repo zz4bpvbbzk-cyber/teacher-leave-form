@@ -393,10 +393,9 @@
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
   #pdfDocWrap .duty-agent .pdf-val{min-width:5em}
   #pdfDocWrap .t1p-main{line-height:2}
-  #pdfDocWrap .type-grid{display:block}
-  #pdfDocWrap .type-grid .ck{position:relative;display:block;padding-left:19px;margin:0 0 2px 0;line-height:1.5}
-  #pdfDocWrap .type-grid .ck .txt{display:block;padding:0}
-  #pdfDocWrap .type-grid .pdf-check{position:absolute;left:0;top:2px;width:12px !important;height:12px !important}
+  #pdfDocWrap .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;font-size:10.5px;align-items:start}
+  #pdfDocWrap .type-grid .ck{display:flex;align-items:flex-start;gap:4px;position:static;padding:0;margin:0;line-height:1.5}
+  #pdfDocWrap .type-grid .ck .txt{display:block;flex:1;padding:0}
   #pdfDocWrap .pdf-val{vertical-align:middle}
   #pdfDocWrap .sign-space{height:40px}
   #pdfDocWrap .t3 td{height:auto;padding:3px 4px}
