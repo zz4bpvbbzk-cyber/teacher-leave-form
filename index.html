@@ -169,12 +169,12 @@
   }
   .t1-sign-lower{padding:5px 9px !important;display:flex;align-items:center;min-height:0}
   .t1-sign .sign-space{flex:1 1 0;min-height:24px}
-  .t1-sign .sign-note{font-size:13px;color:#000;white-space:nowrap;font-weight:400}
+  .t1-sign .sign-note{font-size:11px;color:#444}
   .t1-sign .cell-title input{width:7em;font-size:12px;margin-left:4px;padding:1px 4px}
   .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
   .fill-date select{font-size:11.5px}
-  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px;align-items:start}
-  .type-grid .ck{display:flex;align-items:flex-start;gap:6px;line-height:1.5;margin:0}
+  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px}
+  .type-grid .ck{line-height:1.5}
   .type-grid .ck .box{position:static;flex:0 0 13px;width:13px;height:13px;margin-top:3px}
   .type-grid .ck .txt{display:block;line-height:1.5;flex:1}
   .t1-reason textarea{height:74px}
@@ -215,7 +215,7 @@
   .rules-ol li{margin-bottom:4px}
   .t2-right .opt{margin-bottom:5px}
   .t2-right .opt .ck .txt{font-size:12.5px}
-  .duty-agent{margin-top:7px;font-size:12.5px;line-height:2.6;white-space:nowrap}
+  .duty-agent{margin-top:7px;font-size:12.5px;line-height:2;white-space:nowrap}
   .duty-agent input[type="text"]{position:static;opacity:1;width:5em;height:auto;margin:0;background:var(--field);border:1px dashed var(--field-line);border-radius:3px;padding:2px 5px}
   .duty-agent .sig-line{display:block;margin-left:18px;margin-top:10px;white-space:nowrap}
   .duty-agent .sigline{display:inline-block;min-width:13.5em;border-bottom:1px solid #000;height:1.6em;vertical-align:bottom;margin-right:4px}
@@ -366,7 +366,7 @@
 
 
   /* PDF 輸出副本（離屏渲染用，文字化欄位） */
-  #pdfDocWrap{position:fixed;left:0;top:0;width:210mm;opacity:0.001;pointer-events:none;background:#fff}
+  #pdfDocWrap{position:fixed;left:0;top:0;width:212mm;opacity:0.001;pointer-events:none;background:#fff}
   #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
@@ -443,12 +443,12 @@
     <!-- 第一區：基本資料 -->
     <table class="t1">
       <tr>
-        <td class="t1-sign" style="width:34%">
+        <td class="t1-sign" style="width:26%">
           <div class="t1-sign-inner">
           <div class="t1-sign-upper">
             <div class="cell-title">請假教師 <input data-key="teacherName" type="text" placeholder="請輸入姓名"></div>
             <div class="sign-space"></div>
-            <div class="sign-note">已確認線上送出假單，<strong>請簽名勿蓋章</strong></div>
+            <div class="sign-note">（已確認線上送出假單，請簽名勿蓋章）</div>
           </div>
           <div class="t1-sign-lower">
             <div class="fill-date">填寫日期：<select data-key="fillM"></select> 月 <select data-key="fillD"></select> 日</div>
@@ -472,7 +472,7 @@
             <label class="ck"><input data-key="type12" type="checkbox"><span class="box"></span><span class="txt">其他（<input data-key="typeOther" class="w6" type="text">）</span></label>
           </div>
         </td>
-        <td class="t1-reason" style="width:26%">
+        <td class="t1-reason">
           <div class="cell-title">請假事由</div>
           <textarea data-key="reason" placeholder="請簡述請假事由…"></textarea>
         </td>
