@@ -883,7 +883,7 @@
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
       var imgW=canvas.width, imgH=canvas.height;
       // 等比縮放至 A4 可用範圍（四周留 10mm 邊）
-      var availW=210-24, availH=297-28;
+      var availW=210-10, availH=297-16;
       var k=Math.min(availW/imgW, availH/imgH);
       var w=imgW*k, h=imgH*k;
       var x=(210-w)/2, y=(297-h)/2;
