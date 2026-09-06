@@ -908,7 +908,8 @@
           var mm=document.getElementById('pdfModal'); if(mm) mm.style.display='none';
           // 顯示顯眼「下載步驟說明」供使用者參考
           showIosGuide();
-        }        }else if(isAndroid){
+        }
+        }else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
