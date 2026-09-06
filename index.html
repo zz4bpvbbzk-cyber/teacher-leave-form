@@ -893,9 +893,25 @@
     // 點背景也可關閉
     box.onclick=function(e){ if(e.target===box){ try{box.parentNode.removeChild(box);}catch(_){ } } };
   }
+  function buildFileName(){
+    // 檔名: MMDD+姓名+請假課務處理單.pdf  (例: 0907張大山請假課務處理單.pdf)
+    try{
+      var fM=document.querySelector('[data-key="fillM"]');
+      var fD=document.querySelector('[data-key="fillD"]');
+      var mm=(fM&&fM.value!=='')?String(fM.value).padStart(2,'0'):'';
+      var dd=(fD&&fD.value!=='')?String(fD.value).padStart(2,'0'):'';
+      if(!mm||!dd){ // 未填日期則用今天
+        var n=new Date(); mm=String(n.getMonth()+1).padStart(2,'0'); dd=String(n.getDate()).padStart(2,'0');
+      }
+      var name=document.querySelector('[data-key="teacherName"]');
+      var nm=name?(name.value||'').trim():'';
+      return (mm+dd)+(nm?nm:'')+'請假課務處理單.pdf';
+    }catch(e){ return '教師請假課務處理單.pdf'; }
+  }
   document.getElementById('pdfConfirm').addEventListener('click',function(){
     if(pendingDoc){
-      var filename='教師請假課務處理單.pdf';
+      var filename=buildFileName();
+      // 例: 0907張大山請假課務處理單.pdf
       var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       document.getElementById('pdfModal').style.display='none';
       if(isMobile){
