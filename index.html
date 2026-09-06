@@ -364,7 +364,9 @@
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
   #pdfDocWrap .pdf-check{display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px !important;font-size:11px !important;font-weight:700;background:#fff;vertical-align:-2px;padding:0;margin:0;box-sizing:border-box}
-  #pdfDocWrap .ck{display:inline-flex;align-items:center;gap:4px}
+  #pdfDocWrap .ck{display:inline-flex;align-items:flex-start;gap:4px}
+  #pdfDocWrap .ck .pdf-check{flex:0 0 12px;margin-top:2px;width:12px !important;height:12px !important}
+  #pdfDocWrap .ck .txt{line-height:1.35;padding-top:0}
   #pdfDocWrap .t3 td{text-align:center;vertical-align:middle}
   #pdfDocWrap .t3 .pdf-val{min-width:30px}
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
@@ -710,8 +712,12 @@
   function buildPdfDoc(){
     try{
     var src=document.querySelector('.form-sheet');
+    // ① 先同步計算總時數（確保「日(時)數共計」為最新值）
+    try{ computeTotal(); }catch(_){}
     // ① 快照：從原始 DOM 讀取所有欄位值（key→value/checked）
     var snapshot={};
+    var td=document.getElementById('totalDisplay');
+    if(td) snapshot['__total__']=td.textContent;
     src.querySelectorAll('[data-key]').forEach(function(el){
       if(el.type==='checkbox'){ snapshot[el.dataset.key]={c:el.checked}; }
       else if(el.tagName==='SELECT'){
@@ -725,6 +731,10 @@
     var clone=src.cloneNode(true);
     function isCourseRow(k){ return /^c[0-9]+_/.test(k); }
     // ③ 依快照還原（不信任 clone 的 select 狀態）
+    if(snapshot['__total__']!==undefined){
+      var clt=clone.querySelector('#totalDisplay');
+      if(clt) clt.textContent=snapshot['__total__'];
+    }
     clone.querySelectorAll('[data-key]').forEach(function(el){
       var snap=snapshot[el.dataset.key];
       if(!snap) { el.parentNode.removeChild(el); return; }
