@@ -895,7 +895,7 @@
           // 3) 關閉原預覽 modal
           var mm=document.getElementById('pdfModal'); if(mm) mm.style.display='none';
           showToast('iPhone PDF 已開啟，請按 Safari 底部 ↗ 分享 / 列印');
-        }}else if(isAndroid){
+        }else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
