@@ -356,7 +356,7 @@
 
 
   /* PDF 輸出副本（離屏渲染用，文字化欄位） */
-  #pdfDocWrap{position:fixed;left:-20000px;top:0;background:#fff}
+  #pdfDocWrap{position:fixed;left:0;top:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none;background:#fff;visibility:hidden}
   #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
@@ -725,6 +725,9 @@
     wrap.innerHTML='';
     wrap.appendChild(clone);
     return wrap.querySelector('.form-sheet');
+    }catch(err){
+      throw new Error('副本建立失敗：'+err.message);
+    }
   }
   var pendingDoc=null;
   var zoomLv=1;
@@ -810,9 +813,11 @@
       body.classList.remove('pdf-capture');
       showPreview(img,doc);
     })
-    .catch(function(){
+    .catch(function(err){
       body.classList.remove('pdf-capture');
-      showToast('PDF 產生失敗，請改用「列印表單」');
+      var msg=(err&&err.message)?err.message:'未知錯誤';
+      showToast('PDF 失敗：'+msg+'（請重試或截圖給工程師）');
+      console.error('PDF生成錯誤:',err);
     });
   });
 
