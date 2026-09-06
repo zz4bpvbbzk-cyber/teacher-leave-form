@@ -359,7 +359,7 @@
 
 
   /* PDF 輸出副本（離屏渲染用，文字化欄位） */
-  #pdfDocWrap{position:fixed;left:0;top:0;width:210mm;opacity:0;pointer-events:none;background:#fff;-webkit-user-select:none;user-select:none}
+  #pdfDocWrap{position:fixed;left:0;top:0;width:210mm;opacity:0.001;pointer-events:none;background:#fff}
   #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
@@ -714,8 +714,10 @@
     // 輸入文字類 → 純文字 span
     clone.querySelectorAll('input[type=text],input[type=number],textarea').forEach(function(el){
       var span=document.createElement('span');
-      span.className=el.value&&el.value.trim()!==''?'pdf-val':'pdf-val-empty';
-      span.textContent=el.value||'';
+      var has=el.value&&el.value.trim()!=='';
+      span.textContent=has?el.value:'';
+      if(has){ span.style.cssText='display:inline-block;min-width:1.8em;text-align:center;vertical-align:middle;line-height:1.4;white-space:pre-wrap;'; }
+      else{ span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
       el.parentNode.replaceChild(span,el);
     });
     // 下拉選單 → 文字
@@ -723,15 +725,15 @@
       var span=document.createElement('span');
       var opt=el.options[el.selectedIndex];
       var v=(opt&&opt.textContent&&opt.textContent.trim())?opt.textContent.trim():(el.value||'');
-      if(v!==''){ span.className='pdf-val'; span.textContent=v; }
-      else{ span.className='pdf-val-empty'; }
+      if(v!==''){ span.textContent=v; span.style.cssText='display:inline-block;min-width:1.8em;text-align:center;vertical-align:middle;line-height:1.4;'; }
+      else{ span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
       el.parentNode.replaceChild(span,el);
     });
     // 勾選框 → ✓ 或空框
     clone.querySelectorAll('input[type=checkbox]').forEach(function(el){
       var mark=document.createElement('span');
-      mark.className='pdf-check';
       mark.textContent=el.checked?'✓':'';
+      mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:11px;font-weight:700;padding:0;margin:0;box-sizing:border-box;vertical-align:middle;background:#fff;';
       el.parentNode.replaceChild(mark,el);
     });
     // 移除原本的 .box 疊加方格（避免雙重方格）
