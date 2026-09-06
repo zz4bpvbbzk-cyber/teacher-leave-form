@@ -872,35 +872,30 @@
       var isAndroid=/Android/i.test(navigator.userAgent);
       try{
         if(isIOS){
-          // iOS Safari:以 Blob URL + iframe 嵌入頁面(iOS最穩定方法, 避免下載失敗/dataURI體積限制)
+          // iOS Safari:整個分頁跳轉到 blob: URL(Safari 直接以內建 PDF 檢視器接管, 工具列 ↗ 分享可運作)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
-          // 關閉原預覽 modal,改為全頁 iframe 顯示 PDF
-          document.getElementById('pdfModal').style.display='none';
-          // 加入全頁 iframe (iOS 內建 PDF 檢視器會自動運作, 用戶從 Safari 工具列的 ↗ 分享儲存)
-          if(!document.getElementById('pdfFullFrame')){
-            var frm=document.createElement('iframe');
-            frm.id='pdfFullFrame';
-            frm.src=url;
-            frm.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#fff;z-index:99999;';
-            document.body.appendChild(frm);
-          }
-          // 加入操作提示列
-          if(!document.getElementById('pdfHintBar')){
-            var bar=document.createElement('div');
-            bar.id='pdfHintBar';
-            bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.88);color:#fff;padding:14px 18px;font-size:14px;text-align:center;z-index:100000;font-family:-apple-system,Helvetica,sans-serif;line-height:1.5;';
-            bar.innerHTML='📌 PDF 已顯示。請按 Safari <b>底部的「↗ 分享」</b>鈕 → 選「<b>儲存到檔案</b>」存到 iPhone / 或傳 LINE / AirDrop / 列印。<br><span id="pdfBackBtn" style="display:inline-block;margin-top:8px;background:#fff;color:#000;padding:6px 14px;border-radius:6px;font-weight:600;cursor:pointer;">↩ 關閉並返回表單</span>';
-            document.body.appendChild(bar);
-            document.getElementById('pdfBackBtn').onclick=function(){
-              try{ document.body.removeChild(document.getElementById('pdfFullFrame')); }catch(_){}
-              try{ document.body.removeChild(document.getElementById('pdfHintBar')); }catch(_){}
-              try{ URL.revokeObjectURL(url); }catch(_){}
-              showToast('已返回表單');
-            };
-          }
-          showToast('PDF 已開啟。請從 Safari 底部「↗ 分享」儲存到 iPhone');
-        }else if(isAndroid){
+          // 把當前分頁內容替換為一個迷你頁(全頁 iframe + 底部操作提示+返回),
+          // 此迷你頁載入 Blob URL 的 PDF。Safari 看到 PDF iframe 會啟用內建 PDF 檢視器,
+          // 同時點 Safari 工具列的 ↗ 分享鈕可作用於當前分頁(內容是 PDF iframe)
+          document.title='請假課務處理單 PDF';
+          // 1) 寫入一個簡單頁面(包含 PDF iframe + 操作提示 + 返回鈕)
+          document.body.innerHTML='<div id="_ph" style="position:fixed;inset:0;background:#f4f4f4;display:flex;flex-direction:column;z-index:99999;font-family:-apple-system,Helvetica,sans-serif">'+
+            '<iframe src="'+(regist=url)+'" style="flex:1;width:100%;border:none;background:#fff"></iframe>'+
+            '<div style="background:rgba(0,0,0,.92);color:#fff;padding:14px 16px;font-size:14px;line-height:1.55">'+
+              '<div style="margin-bottom:4px">📌 <b style="color:#ffd84d">iOS 請按 Safari 底部的「↗ 分享」</b> → 選「<b style="color:#ffd84d">儲存到檔案</b>」存到「檔案」App</div>'+
+              '<div style="font-size:12px;opacity:.85;margin-bottom:6px">(也可按 Safari 「列印」圖示直接列印；而 AirDrop/傳 LINE 也在分享選單裡)</div>'+
+              '<span id="_back" style="display:inline-block;background:#fff;color:#333;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer">↩ 關閉並返回表單</span>'+
+            '</div>'+
+          '</div>';
+          // 2) 返回鈕事件: 用 history.back() reload 原頁
+          setTimeout(function(){
+            var b=document.getElementById('_back'); if(b) b.onclick=function(){ try{ history.back(); }catch(_){ location.reload(); } };
+          },50);
+          // 3) 關閉原預覽 modal
+          var mm=document.getElementById('pdfModal'); if(mm) mm.style.display='none';
+          showToast('iPhone PDF 已開啟，請按 Safari 底部 ↗ 分享 / 列印');
+        }}else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
