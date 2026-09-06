@@ -872,25 +872,31 @@
       var isAndroid=/Android/i.test(navigator.userAgent);
       try{
         if(isIOS){
-          // iOS Safari：必須用 data: + 隱藏 <a download> 觸發（Blob URL+_blank 會出現 WebKitBlobResource 錯誤）
+          // iOS Safari：直接用內建 PDF 檢視器開啟(從右上「↗ 分享」可儲存到檔案/LINE/AirDrop)
+          // 注意: <a download> 在 iOS Safari 不可靠(會出現「下載失敗」), 改用 window.open 直接開啟
           var dataUri=pendingDoc.output('datauristring');
-          var a=document.createElement('a');
-          a.href=dataUri; a.download=filename;
-          a.target='_blank'; a.rel='noopener';
-          document.body.appendChild(a); a.click();
-          setTimeout(function(){ try{ document.body.removeChild(a); }catch(_){ } },500);
-          showToast('iPhone 請按畫面頂端的「下載」圖示，或直接點連結以「儲存到檔案」/「分享」');
+          // 先建立隱藏提示區塊,告知使用者怎麼處理
+          showToast('已開啟 PDF，請用右上角「↗ 分享」鈕儲存到檔案或傳送');
+          // 用 window.open 開啟(Safari 內建檢視器)
+          var w=window.open(dataUri,'_blank');
+          // 若阻擋彈出視窗(blocked)的保險: 降級用 <a target=_blank>
+          if(!w || w.closed){
+            var a=document.createElement('a');
+            a.href=dataUri; a.target='_blank'; a.rel='noopener';
+            document.body.appendChild(a); a.click();
+            setTimeout(function(){ try{document.body.removeChild(a);}catch(_){} },500);
+          }
         }else if(isAndroid){
-          // Android Chrome：Blob URL 直接下載（檔案管理員 > 下載資料夾）
+          // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
           var a=document.createElement('a');
           a.href=url; a.download=filename; a.style.display='none';
           document.body.appendChild(a); a.click();
-          setTimeout(function(){ try{URL.revokeObjectURL(url); document.body.removeChild(a);}catch(_){ } },2000);
-          showToast('Android PDF 已下載，請至「下載」資料夾查看，或從右上角工具列下載歷史開啟');
+          setTimeout(function(){ try{URL.revokeObjectURL(url); document.body.removeChild(a);}catch(_){ } },3000);
+          showToast('Android PDF 已下載，請至右上角「下載」圖示查看');
         }else{
-          // 電腦：保留原行為
+          // 電腦: 維持原行為
           pendingDoc.save(filename);
           showToast('PDF 已下載，請至「下載」資料夾查看');
         }
