@@ -872,30 +872,16 @@
       var isAndroid=/Android/i.test(navigator.userAgent);
       try{
         if(isIOS){
-          // iOS Safari:整個分頁跳轉到 blob: URL(Safari 直接以內建 PDF 檢視器接管, 工具列 ↗ 分享可運作)
+          // iOS Safari 最可靠方式: 同分頁導向到 blob: URL
+          // (Safari 以內建 PDF 檢視器接管, 分享/列印/儲存到「檔案」皆可從 Safari 工具列操作)
+          // 表單資料已自動暫存, 按 Safari 底部的「返回」即可回到表單並還原資料
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
-          // 把當前分頁內容替換為一個迷你頁(全頁 iframe + 底部操作提示+返回),
-          // 此迷你頁載入 Blob URL 的 PDF。Safari 看到 PDF iframe 會啟用內建 PDF 檢視器,
-          // 同時點 Safari 工具列的 ↗ 分享鈕可作用於當前分頁(內容是 PDF iframe)
-          document.title='請假課務處理單 PDF';
-          // 1) 寫入一個簡單頁面(包含 PDF iframe + 操作提示 + 返回鈕)
-          document.body.innerHTML='<div id="_ph" style="position:fixed;inset:0;background:#f4f4f4;display:flex;flex-direction:column;z-index:99999;font-family:-apple-system,Helvetica,sans-serif">'+
-            '<iframe src="'+(regist=url)+'" style="flex:1;width:100%;border:none;background:#fff"></iframe>'+
-            '<div style="background:rgba(0,0,0,.92);color:#fff;padding:14px 16px;font-size:14px;line-height:1.55">'+
-              '<div style="margin-bottom:4px">📌 <b style="color:#ffd84d">iOS 請按 Safari 底部的「↗ 分享」</b> → 選「<b style="color:#ffd84d">儲存到檔案</b>」存到「檔案」App</div>'+
-              '<div style="font-size:12px;opacity:.85;margin-bottom:6px">(也可按 Safari 「列印」圖示直接列印；而 AirDrop/傳 LINE 也在分享選單裡)</div>'+
-              '<span id="_back" style="display:inline-block;background:#fff;color:#333;border-radius:8px;padding:8px 14px;font-weight:600;cursor:pointer">↩ 關閉並返回表單</span>'+
-            '</div>'+
-          '</div>';
-          // 2) 返回鈕事件: 用 history.back() reload 原頁
-          setTimeout(function(){
-            var b=document.getElementById('_back'); if(b) b.onclick=function(){ try{ history.back(); }catch(_){ location.reload(); } };
-          },50);
-          // 3) 關閉原預覽 modal
+          try{ save(); }catch(_){}
           var mm=document.getElementById('pdfModal'); if(mm) mm.style.display='none';
-          showToast('iPhone PDF 已開啟，請按 Safari 底部 ↗ 分享 / 列印');
-        }else if(isAndroid){
+          showToast('正在開啟 PDF…');
+          setTimeout(function(){ try{ location.href=url; }catch(e){ try{ pendingDoc.save(filename); }catch(_){ } } },300);
+        }        }else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
           var url=URL.createObjectURL(blob);
