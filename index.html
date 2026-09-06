@@ -302,7 +302,10 @@
   .pdf-preview-wrap{flex:1;overflow:auto;border:1px solid #ddd;border-radius:8px;background:#f5f5f5;padding:8px;display:flex;justify-content:center}
   .pdf-preview-wrap.zoomed{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:10001;display:flex;align-items:center;justify-content:center;padding:10px}
   .pdf-preview-wrap.zoomed img{max-width:96vw;max-height:94vh;cursor:zoom-out;box-shadow:none}
-  .pdf-preview-wrap img{max-width:100%;height:auto;box-shadow:0 2px 8px rgba(0,0,0,.2);cursor:zoom-in}
+  .pdf-preview-wrap{display:block;text-align:center;overflow:auto}
+  .pdf-preview-wrap img{box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .pdf-zoom{display:flex;align-items:center;gap:8px;justify-content:center}
+  .pdf-zoom span{font-size:13px;font-weight:700;min-width:48px;text-align:center}
   .pdf-modal-actions{display:flex;justify-content:flex-end;gap:10px}
   @media print{.pdf-modal{display:none !important}}
 
@@ -351,6 +354,16 @@
     .pdf-modal-box{margin:10px;padding:14px}
   }
 
+
+  /* PDF 輸出副本（離屏渲染用，文字化欄位） */
+  #pdfDocWrap{position:fixed;left:-20000px;top:0;background:#fff}
+  #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
+  #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
+  #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
+  #pdfDocWrap .pdf-check{display:inline-block;width:13px;height:13px;border:1px solid #000;text-align:center;line-height:11px;font-weight:700;background:#fff}
+  #pdfDocWrap .sign-space{height:40px}
+  #pdfDocWrap .t3 td{height:auto;padding:3px 4px}
+  #pdfDocWrap .t3 td .pdf-val-empty{min-width:1em}
 </style>
 </head>
 <body>
@@ -361,6 +374,10 @@
     <h3>PDF 預覽</h3>
     <p id="pdfProg">請確認表單內容正確無誤後，再下載。</p>
     <div class="pdf-preview-wrap"><img id="pdfImg" alt="PDF 預覽"></div>
+    <div class="pdf-zoom"><button class="btn ghost" id="zoomOut">－ 縮小</button>
+    <span id="zoomPct">100%</span>
+    <button class="btn ghost" id="zoomIn">＋ 放大</button>
+    <button class="btn ghost" id="zoomFit">適合視窗</button></div>
     <div class="pdf-modal-actions">
       <button class="btn ghost" id="pdfCancel">取消</button>
       <button class="btn primary" id="pdfConfirm">確認下載</button>
@@ -679,7 +696,58 @@
     }
     return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk, period: periodOk()};
   }
+  function buildPdfDoc(){
+    var src=document.querySelector('.form-sheet');
+    var clone=src.cloneNode(true);
+    // 輸入文字類 → 純文字 span
+    clone.querySelectorAll('input[type=text],input[type=number],textarea').forEach(function(el){
+      var span=document.createElement('span');
+      span.className=el.value&&el.value.trim()!==''?'pdf-val':'pdf-val-empty';
+      span.textContent=el.value||'';
+      el.parentNode.replaceChild(span,el);
+    });
+    // 下拉選單 → 文字
+    clone.querySelectorAll('select').forEach(function(el){
+      var span=document.createElement('span');
+      var v=el.value||'';
+      if(v!==''){ span.className='pdf-val'; span.textContent=v; }
+      else{ span.className='pdf-val-empty'; }
+      el.parentNode.replaceChild(span,el);
+    });
+    // 勾選框 → ✓ 或空框
+    clone.querySelectorAll('input[type=checkbox]').forEach(function(el){
+      var mark=document.createElement('span');
+      mark.className='pdf-check';
+      mark.textContent=el.checked?'✓':'';
+      el.parentNode.replaceChild(mark,el);
+    });
+    var wrap=document.getElementById('pdfDocWrap');
+    wrap.innerHTML='';
+    wrap.appendChild(clone);
+    return wrap.querySelector('.form-sheet');
+  }
   var pendingDoc=null;
+  var zoomLv=1;
+  function fitZoom(){
+    var img=document.getElementById('pdfImg');
+    var w=window.innerWidth*0.5;
+    zoomLv=1;
+    img.style.width='100%';
+  }
+  function applyZoom(){
+    var img=document.getElementById('pdfImg');
+    var base=680;
+    img.style.width=Math.round(base*zoomLv)+'px';
+    img.style.maxWidth='none';
+    document.getElementById('zoomPct').textContent=Math.round(zoomLv*100)+'%';
+  }
+  function showPreview(imgData,doc){
+    pendingDoc=doc;
+    document.getElementById('pdfImg').src=imgData;
+    document.getElementById('pdfProg').textContent='已產生 PDF 預覽，可用下方按鈕放大檢查內容，確認無誤後再下載。';
+    zoomLv=1; applyZoom();
+    document.getElementById('pdfModal').style.display='flex';
+  }
   function showPreview(imgData,doc){
     pendingDoc=doc;
     document.getElementById('pdfImg').src=imgData;
@@ -692,6 +760,14 @@
     document.getElementById('pdfProg').textContent='已產生 PDF 預覽，請確認內容正確無誤後再下載。';
     document.getElementById('pdfModal').style.display='flex';
   }
+  document.getElementById('zoomIn').addEventListener('click',function(){ zoomLv=Math.min(zoomLv+0.25,3); applyZoom(); });
+  document.getElementById('zoomOut').addEventListener('click',function(){ zoomLv=Math.max(zoomLv-0.25,0.25); applyZoom(); });
+  document.getElementById('zoomFit').addEventListener('click',function(){
+    zoomLv=1;
+    var img=document.getElementById('pdfImg');
+    img.style.width='100%'; img.style.maxWidth='100%';
+    document.getElementById('zoomPct').textContent='適合視窗';
+  });
   document.getElementById('pdfConfirm').addEventListener('click',function(){
     if(pendingDoc){ pendingDoc.save('教師請假課務處理單.pdf'); }
     document.getElementById('pdfModal').style.display='none';
@@ -718,14 +794,15 @@
     var fontReady=(document.fonts&&document.fonts.ready)?document.fonts.ready:Promise.resolve();
     fontReady.then(function(){ return new Promise(function(r){ setTimeout(r,400); }); })
     .then(function(){
-      return html2canvas(document.querySelector('.form-sheet'),{scale:3,useCORS:true,backgroundColor:'#ffffff'});
+      var pdfSheet=buildPdfDoc();
+      return html2canvas(pdfSheet,{scale:3,useCORS:true,backgroundColor:'#ffffff'});
     })
     .then(function(canvas){
       var img=canvas.toDataURL('image/png');
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
       var imgW=canvas.width, imgH=canvas.height;
       // 等比縮放至 A4 可用範圍（四周留 10mm 邊）
-      var availW=210-20, availH=297-20;
+      var availW=210-24, availH=297-28;
       var k=Math.min(availW/imgW, availH/imgH);
       var w=imgW*k, h=imgH*k;
       var x=(210-w)/2, y=(297-h)/2;
