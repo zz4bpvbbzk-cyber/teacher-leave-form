@@ -872,20 +872,34 @@
       var isAndroid=/Android/i.test(navigator.userAgent);
       try{
         if(isIOS){
-          // iOS Safari：直接用內建 PDF 檢視器開啟(從右上「↗ 分享」可儲存到檔案/LINE/AirDrop)
-          // 注意: <a download> 在 iOS Safari 不可靠(會出現「下載失敗」), 改用 window.open 直接開啟
-          var dataUri=pendingDoc.output('datauristring');
-          // 先建立隱藏提示區塊,告知使用者怎麼處理
-          showToast('已開啟 PDF，請用右上角「↗ 分享」鈕儲存到檔案或傳送');
-          // 用 window.open 開啟(Safari 內建檢視器)
-          var w=window.open(dataUri,'_blank');
-          // 若阻擋彈出視窗(blocked)的保險: 降級用 <a target=_blank>
-          if(!w || w.closed){
-            var a=document.createElement('a');
-            a.href=dataUri; a.target='_blank'; a.rel='noopener';
-            document.body.appendChild(a); a.click();
-            setTimeout(function(){ try{document.body.removeChild(a);}catch(_){} },500);
+          // iOS Safari:以 Blob URL + iframe 嵌入頁面(iOS最穩定方法, 避免下載失敗/dataURI體積限制)
+          var blob=pendingDoc.output('blob');
+          var url=URL.createObjectURL(blob);
+          // 關閉原預覽 modal,改為全頁 iframe 顯示 PDF
+          document.getElementById('pdfModal').style.display='none';
+          // 加入全頁 iframe (iOS 內建 PDF 檢視器會自動運作, 用戶從 Safari 工具列的 ↗ 分享儲存)
+          if(!document.getElementById('pdfFullFrame')){
+            var frm=document.createElement('iframe');
+            frm.id='pdfFullFrame';
+            frm.src=url;
+            frm.style.cssText='position:fixed;top:0;left:0;width:100%;height:100%;border:none;background:#fff;z-index:99999;';
+            document.body.appendChild(frm);
           }
+          // 加入操作提示列
+          if(!document.getElementById('pdfHintBar')){
+            var bar=document.createElement('div');
+            bar.id='pdfHintBar';
+            bar.style.cssText='position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,.88);color:#fff;padding:14px 18px;font-size:14px;text-align:center;z-index:100000;font-family:-apple-system,Helvetica,sans-serif;line-height:1.5;';
+            bar.innerHTML='📌 PDF 已顯示。請按 Safari <b>底部的「↗ 分享」</b>鈕 → 選「<b>儲存到檔案</b>」存到 iPhone / 或傳 LINE / AirDrop / 列印。<br><span id="pdfBackBtn" style="display:inline-block;margin-top:8px;background:#fff;color:#000;padding:6px 14px;border-radius:6px;font-weight:600;cursor:pointer;">↩ 關閉並返回表單</span>';
+            document.body.appendChild(bar);
+            document.getElementById('pdfBackBtn').onclick=function(){
+              try{ document.body.removeChild(document.getElementById('pdfFullFrame')); }catch(_){}
+              try{ document.body.removeChild(document.getElementById('pdfHintBar')); }catch(_){}
+              try{ URL.revokeObjectURL(url); }catch(_){}
+              showToast('已返回表單');
+            };
+          }
+          showToast('PDF 已開啟。請從 Safari 底部「↗ 分享」儲存到 iPhone');
         }else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
