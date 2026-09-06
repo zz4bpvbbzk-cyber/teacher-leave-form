@@ -174,9 +174,9 @@
   .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
   .fill-date select{font-size:11.5px}
   .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px;align-items:start}
-  .type-grid .ck{position:relative;display:block;line-height:1.5;padding-left:18px;margin:0}
-  .type-grid .ck .box{position:absolute;left:0;top:2px;flex:0 0 13px}
-  .type-grid .ck .txt{display:block;line-height:1.5;padding-left:0;text-indent:0}
+  .type-grid .ck{display:flex;align-items:flex-start;gap:6px;line-height:1.5;margin:0}
+  .type-grid .ck .box{position:static;flex:0 0 13px;width:13px;height:13px;margin-top:3px}
+  .type-grid .ck .txt{display:block;line-height:1.5;flex:1}
   .t1-reason textarea{height:74px}
 
   /* 請假期間一長欄（跨整頁寬度） */
@@ -272,8 +272,9 @@
     .t1 td{padding:4px 6px}
     .t1-sign .sign-space{height:20px}
     .type-grid{font-size:10.5px;gap:1px 8px;align-items:start}
-    .type-grid .ck{position:relative;display:block;padding-left:16px}
-    .type-grid .ck .txt{display:block}
+    .type-grid .ck{display:flex;align-items:flex-start;gap:5px}
+    .type-grid .ck .box{position:static;flex:0 0 13px}
+    .type-grid .ck .txt{display:block;flex:1}
     .t1-reason textarea{height:50px}
     .t1p-main .prow{line-height:1.55}
     .t2 td{padding:4px 7px}
@@ -338,6 +339,7 @@
     .t1-sign .cell-title input{width:6em}
     .t1-sign .sign-note{font-size:10.5px}
     .type-grid{grid-template-columns:1fr;font-size:11px;gap:2px}
+    .type-grid .ck{display:flex;align-items:flex-start;gap:6px}
     .t1-reason textarea{height:60px}
     .t1p-label{font-size:11px}
     .t1p-main{padding:4px 6px !important}
