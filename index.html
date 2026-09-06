@@ -865,6 +865,34 @@
     img.style.width='100%'; img.style.maxWidth='100%';
     document.getElementById('zoomPct').textContent='適合視窗';
   });
+  function showIosGuide(){
+    // 移除舊的引導 (若存在)
+    var ex=document.getElementById('iosGuide'); if(ex) ex.parentNode.removeChild(ex);
+    var box=document.createElement('div');
+    box.id='iosGuide';
+    box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;font-family:-apple-system,Helvetica,sans-serif;';
+    box.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px 22px 18px;line-height:1.55;color:#222;box-shadow:0 20px 50px rgba(0,0,0,.35)">'+
+      '<h3 style="margin:0 0 6px;font-size:18px;color:#0a7a3a">✅ PDF 已下載完成</h3>'+
+      '<div style="font-size:13px;color:#666;margin-bottom:12px">檔案已存到 iPhone 內建的「檔案」App</div>'+
+      '<div style="background:#f6f8fa;border-radius:8px;padding:12px 14px;margin-bottom:14px">'+
+        '<div style="font-weight:600;margin-bottom:6px">📂 找檔案：</div>'+
+        '<div style="font-size:13px;color:#444">開啟「<b>檔案</b>」App（與「照片」同一頁）→「<b>我的 iPhone</b>」下的「<b>Safari</b>」→「<b>下載項目</b>」</div>'+
+      '</div>'+
+      '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px">'+
+        '<div style="font-weight:600;margin-bottom:4px">🖨 直接列印：</div>'+
+        '<div>按下方左鍵「印表機」圖示直接印</div>'+
+      '</div>'+
+      '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px">'+
+        '<div style="font-weight:600;margin-bottom:4px">📤 分享 / AirDrop / 傳 LINE：</div>'+
+        '<div>在「檔案」App 點 PDF → 左下「<b>↗ 分享</b>」 鈕 → 選 LINE / AirDrop</div>'+
+      '</div>'+
+      '<div style="text-align:right"><span id="iosGuideClose" style="display:inline-block;background:#0a7a3a;color:#fff;border-radius:8px;padding:9px 24px;font-weight:600;font-size:15px;cursor:pointer">知道了</span></div>'+
+    '</div>';
+    document.body.appendChild(box);
+    document.getElementById('iosGuideClose').onclick=function(){ try{box.parentNode.removeChild(box);}catch(_){ } };
+    // 點背景也可關閉
+    box.onclick=function(e){ if(e.target===box){ try{box.parentNode.removeChild(box);}catch(_){ } } };
+  }
   document.getElementById('pdfConfirm').addEventListener('click',function(){
     if(pendingDoc){
       var filename='教師請假課務處理單.pdf';
@@ -872,15 +900,14 @@
       var isAndroid=/Android/i.test(navigator.userAgent);
       try{
         if(isIOS){
-          // iOS Safari 最可靠方式: 同分頁導向到 blob: URL
-          // (Safari 以內建 PDF 檢視器接管, 分享/列印/儲存到「檔案」皆可從 Safari 工具列操作)
-          // 表單資料已自動暫存, 按 Safari 底部的「返回」即可回到表單並還原資料
-          var blob=pendingDoc.output('blob');
-          var url=URL.createObjectURL(blob);
-          try{ save(); }catch(_){}
+          // iOS Safari：使用 jsPDF 原生 save() (Safari 內部 Downloads), 以明亮 modal 明確告知存檔位置與操作步驟
+          try{
+            save(); // 先儲存當前填寫內容
+            pendingDoc.save(filename);
+          }catch(e){}
           var mm=document.getElementById('pdfModal'); if(mm) mm.style.display='none';
-          showToast('正在開啟 PDF…');
-          setTimeout(function(){ try{ location.href=url; }catch(e){ try{ pendingDoc.save(filename); }catch(_){ } } },300);
+          // 顯示顯眼「下載步驟說明」供使用者參考
+          showIosGuide();
         }        }else if(isAndroid){
           // Android Chrome:觸發瀏覽器原生下載(至「下載」資料夾,從右上通知/下載歷史可開啟)
           var blob=pendingDoc.output('blob');
