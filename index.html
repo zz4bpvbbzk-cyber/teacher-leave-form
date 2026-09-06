@@ -697,6 +697,7 @@
     return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk, period: periodOk()};
   }
   function buildPdfDoc(){
+    try{
     var src=document.querySelector('.form-sheet');
     var clone=src.cloneNode(true);
     // 輸入文字類 → 純文字 span
