@@ -684,6 +684,44 @@
       if(el.type==='checkbox'){ el.checked=!!data[el.dataset.key]; }
       else{ el.value=data[el.dataset.key]==null?'':data[el.dataset.key]; }
     });
+    checkStoredPrivacy();
+  }
+
+
+  /* ---- 隱私保護：偵測先前資料 ---- */
+  function checkStoredPrivacy(){
+    var ex=document.getElementById('privacyModal'); if(ex) return;
+    var dirty=false;
+    try{
+      document.querySelectorAll('[data-key]').forEach(function(el){
+        if(el.type==='checkbox'){ if(el.checked) dirty=true; }
+        else{ if(String(el.value||'').trim()!=='') dirty=true; }
+      });
+      var rows=document.getElementById('courseBody');
+      if(rows && rows.children.length>5) dirty=true; // 有新增課務列
+    }catch(e){}
+    if(!dirty) return; // 沒有先前資料，不需警示
+    var box=document.createElement('div');
+    box.id='privacyModal';
+    box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;font-family:-apple-system,Helvetica,sans-serif;';
+    box.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px;line-height:1.6;color:#222;box-shadow:0 20px 50px rgba(0,0,0,.35)">'+
+      '<div style="font-size:34px;text-align:center;margin-bottom:6px">⚠️</div>'+
+      '<h3 style="margin:0 0 6px;font-size:18px;color:#b3402e;text-align:center">此裝置留有先前填寫的請假資料</h3>'+
+      '<div style="font-size:13px;color:#666;text-align:center;margin-bottom:12px">可能是上一位使用者留下的。若您與他非同一人，請清除，以保護個資。</div>'+
+      '<div style="background:#f6f8fa;border-radius:8px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:#444">'+
+        '📌 若是你本人的資料（例如手機重新開啟），按「這是我的資料」即可繼續填寫。<br>'+
+        '📌 若是公用電腦，離開前請務必按「清除並重新開始」。</div>'+
+      '<div style="display:flex;gap:10px">'+
+        '<span id="privacyKeep" style="flex:1;text-align:center;background:#eef1f4;color:#333;border-radius:8px;padding:10px 12px;font-weight:600;font-size:14px;cursor:pointer">這是我的資料</span>'+
+        '<span id="privacyClear" style="flex:1.15;text-align:center;background:#b3402e;color:#fff;border-radius:8px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer">清除並重新開始</span>'+
+      '</div>'+
+    '</div>';
+    document.body.appendChild(box);
+    document.getElementById('privacyKeep').onclick=function(){ try{box.parentNode.removeChild(box);}catch(_){} };
+    document.getElementById('privacyClear').onclick=function(){
+      try{ localStorage.removeItem('xinxing-leave-form-v1'); }catch(e){}
+      location.reload();
+    };
   }
 
   /* ---- 自動計算日(時)數 ---- */
