@@ -710,40 +710,54 @@
   function buildPdfDoc(){
     try{
     var src=document.querySelector('.form-sheet');
+    // ① 快照：從原始 DOM 讀取所有欄位值（key→value/checked）
+    var snapshot={};
+    src.querySelectorAll('[data-key]').forEach(function(el){
+      if(el.type==='checkbox'){ snapshot[el.dataset.key]={c:el.checked}; }
+      else if(el.tagName==='SELECT'){
+        var opt=el.options[el.selectedIndex];
+        var val=(opt&&opt.textContent&&opt.textContent.trim())?opt.textContent.trim():'';
+        snapshot[el.dataset.key]={v:val};
+      }
+      else{ snapshot[el.dataset.key]={v:el.value}; }
+    });
+    // ② 複製
     var clone=src.cloneNode(true);
-    // 輸入文字類 → 純文字 span
-    clone.querySelectorAll('input[type=text],input[type=number],textarea').forEach(function(el){
+    function isCourseRow(k){ return /^c[0-9]+_/.test(k); }
+    // ③ 依快照還原（不信任 clone 的 select 狀態）
+    clone.querySelectorAll('[data-key]').forEach(function(el){
+      var snap=snapshot[el.dataset.key];
+      if(!snap) { el.parentNode.removeChild(el); return; }
+      if(el.type==='checkbox'){
+        var mark=document.createElement('span');
+        mark.textContent=snap.c?'✓':'';
+        // 課務明細鐘點費小格 vs 其他：統一 12x12 正方
+        mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9px;font-weight:700;padding:0;margin:0;box-sizing:border-box;vertical-align:middle;background:#fff;';
+        el.parentNode.replaceChild(mark,el);
+        return;
+      }
+      var val=(snap.v?String(snap.v):'').trim();
       var span=document.createElement('span');
-      var has=el.value&&el.value.trim()!=='';
-      span.textContent=has?el.value:'';
-      if(has){ span.style.cssText='display:inline-block;min-width:1.8em;text-align:center;vertical-align:middle;line-height:1.4;white-space:pre-wrap;'; }
-      else{ span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
+      var course=isCourseRow(el.dataset.key);
+      if(val!==''){
+        span.textContent=val;
+        span.style.cssText='display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;line-height:1.4;';
+      }else{
+        // 空白：課務明細列不留底線（完全空白）；其他欄位保留底線
+        if(course){ span.textContent=''; span.style.cssText='display:inline-block;min-width:1.6em;'; }
+        else{ span.textContent=''; span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
+      }
       el.parentNode.replaceChild(span,el);
     });
-    // 下拉選單 → 文字
-    clone.querySelectorAll('select').forEach(function(el){
-      var span=document.createElement('span');
-      var opt=el.options[el.selectedIndex];
-      var v=(opt&&opt.textContent&&opt.textContent.trim())?opt.textContent.trim():(el.value||'');
-      if(v!==''){ span.textContent=v; span.style.cssText='display:inline-block;min-width:1.8em;text-align:center;vertical-align:middle;line-height:1.4;'; }
-      else{ span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
-      el.parentNode.replaceChild(span,el);
-    });
-    // 勾選框 → ✓ 或空框
-    clone.querySelectorAll('input[type=checkbox]').forEach(function(el){
-      var mark=document.createElement('span');
-      mark.textContent=el.checked?'✓':'';
-      mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:11px;font-weight:700;padding:0;margin:0;box-sizing:border-box;vertical-align:middle;background:#fff;';
-      el.parentNode.replaceChild(mark,el);
-    });
-    // 移除原本的 .box 疊加方格（避免雙重方格）
+    // ④ 移除殘留 .box 與樣式殘留
     clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
+    clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
     var wrap=document.getElementById('pdfDocWrap');
     if(!wrap){
       wrap=document.createElement('div');
       wrap.id='pdfDocWrap';
       wrap.setAttribute('aria-hidden','true');
-      wrap.style.cssText='position:fixed;left:0;top:0;width:210mm;opacity:0;pointer-events:none;background:#fff';
+      wrap.style.cssText='position:fixed;left:0;top:0;width:210mm;opacity:0.001;pointer-events:none;background:#fff';
       document.body.appendChild(wrap);
     }
     while(wrap.firstChild) wrap.removeChild(wrap.firstChild);
