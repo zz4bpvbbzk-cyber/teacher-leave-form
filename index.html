@@ -296,7 +296,7 @@
   }
 
   /* PDF 擷取模式（等同列印樣式） */
-  .pdf-capture .form-sheet{width:210mm;min-height:0;box-shadow:none;padding:0;font-size:11.5px;line-height:1.4;background:#fff}
+  .pdf-capture .form-sheet{width:210mm;min-height:0;box-shadow:none;padding:10mm;font-size:12.5px;line-height:1.55;background:#fff}
   .pdf-capture input[type=text],.pdf-capture input[type=number],.pdf-capture textarea,.pdf-capture select{background:transparent !important;border:none !important;border-radius:0;padding:0;-webkit-appearance:none;appearance:none}
   .pdf-capture .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
   .pdf-capture .duty-agent input[type="text"]{background:transparent !important;border:1px dashed #000 !important;width:5em;padding:0}
@@ -377,6 +377,10 @@
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
   #pdfDocWrap .duty-agent .pdf-val{min-width:5em}
   #pdfDocWrap .t1p-main{line-height:2}
+  #pdfDocWrap .type-grid{display:block}
+  #pdfDocWrap .type-grid .ck{position:relative;display:block;padding-left:19px;margin:0 0 2px 0;line-height:1.5}
+  #pdfDocWrap .type-grid .ck .txt{display:block;padding:0}
+  #pdfDocWrap .type-grid .pdf-check{position:absolute;left:0;top:2px;width:12px !important;height:12px !important}
   #pdfDocWrap .pdf-val{vertical-align:middle}
   #pdfDocWrap .sign-space{height:40px}
   #pdfDocWrap .t3 td{height:auto;padding:3px 4px}
@@ -764,13 +768,10 @@
     });
     // ④ 移除殘留 .box 與樣式殘留
     clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
-    // ⑤ 拆掉 .ck 的 flexbox（html2canvas 對 flex 支援差）：
-    //    去 class，改自然 inline 排列，方格用 vertical-align 對齊第一行
+    // ⑤ 保留 .ck class（讓對齊樣式生效）；僅移除可能干擾的 inline input 樣式屬性
     clone.querySelectorAll('.ck').forEach(function(l){
-      l.removeAttribute('class');
-    });
-    clone.querySelectorAll('.txt').forEach(function(t){
-      t.style.display='inline';
+      l.style.cssText='';
+      l.removeAttribute('disabled');
     });
     clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
     var wrap=document.getElementById('pdfDocWrap');
