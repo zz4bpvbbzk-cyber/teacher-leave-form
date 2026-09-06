@@ -173,8 +173,8 @@
   .t1-sign .cell-title input{width:7em;font-size:12px;margin-left:4px;padding:1px 4px}
   .fill-date{white-space:nowrap;margin-top:0;font-size:12px}
   .fill-date select{font-size:11.5px}
-  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px}
-  .type-grid .ck{line-height:1.5}
+  .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px;font-size:12px;align-items:start}
+  .type-grid .ck{line-height:1.5;align-items:flex-start}
   .t1-reason textarea{height:74px}
 
   /* 請假期間一長欄（跨整頁寬度） */
@@ -213,10 +213,10 @@
   .rules-ol li{margin-bottom:4px}
   .t2-right .opt{margin-bottom:5px}
   .t2-right .opt .ck .txt{font-size:12.5px}
-  .duty-agent{margin-top:7px;font-size:12.5px;line-height:2;white-space:nowrap}
+  .duty-agent{margin-top:7px;font-size:12.5px;line-height:2.6;white-space:nowrap}
   .duty-agent input[type="text"]{position:static;opacity:1;width:5em;height:auto;margin:0;background:var(--field);border:1px dashed var(--field-line);border-radius:3px;padding:2px 5px}
-  .duty-agent .sig-line{display:block;margin-left:18px;margin-top:2px;white-space:nowrap}
-  .duty-agent .sigline{display:inline-block;min-width:13.5em;border-bottom:1px solid #000;height:1.1em;vertical-align:bottom;margin-right:4px}
+  .duty-agent .sig-line{display:block;margin-left:18px;margin-top:10px;white-space:nowrap}
+  .duty-agent .sigline{display:inline-block;min-width:13.5em;border-bottom:1px solid #000;height:1.6em;vertical-align:bottom;margin-right:4px}
 
   /* ---------- 第三區：課務明細表 ---------- */
   .t3{border:1.5px solid #000}
@@ -244,7 +244,7 @@
   .stamp-cell:last-child{border-right:none}
   .stamp-title{font-size:14px;font-weight:700;letter-spacing:.2em}
   .stamp-note{font-size:11px;color:#444;margin:2px 0 6px}
-  .stamp-space{height:38px;border-bottom:1px solid #000;margin:0 auto;max-width:64%}
+  .stamp-space{height:58px;border-bottom:1px solid #000;margin:0 auto;max-width:64%}
   .footer-note{text-align:center;font-size:11.5px;color:#333;margin-top:8px}
 
   /* ---------- 列印 ---------- */
@@ -262,7 +262,7 @@
     select{padding:0 1px !important}
     .t3 th{background:#fff !important}
     .save-hint{display:none}
-    .stamp-space{height:18px}
+    .stamp-space{height:30px}
     .t1-sign{min-height:0}
     .t1-sign .sign-space{min-height:18px}
     .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
@@ -282,7 +282,7 @@
     .rules{padding:3px 10px 5px;margin-top:6px}
     .rules li{margin-bottom:2px}
     .rules .sub{margin:1px 0}
-    .stamp-cell{padding:3px 10px}
+    .stamp-cell{padding:5px 12px}
     .footer-note{margin-top:2px}
     .form-top{margin-bottom:3px}
     .form-top h1{font-size:17px}
@@ -923,6 +923,11 @@
     }
     save();
     if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); periodErrorCheck(); }
+  });
+  document.addEventListener('input',function(e){
+    if(e.target.matches('[data-key]')&&PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){
+      computeTotal(); periodErrorCheck();
+    }
   });
 
   setRows(5);
