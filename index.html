@@ -360,7 +360,14 @@
   #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
-  #pdfDocWrap .pdf-check{display:inline-block;width:13px;height:13px;border:1px solid #000;text-align:center;line-height:11px;font-weight:700;background:#fff}
+  #pdfDocWrap .pdf-check{display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px !important;font-size:11px !important;font-weight:700;background:#fff;vertical-align:-2px;padding:0;margin:0;box-sizing:border-box}
+  #pdfDocWrap .ck{display:inline-flex;align-items:center;gap:4px}
+  #pdfDocWrap .t3 td{text-align:center;vertical-align:middle}
+  #pdfDocWrap .t3 .pdf-val{min-width:30px}
+  #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
+  #pdfDocWrap .duty-agent .pdf-val{min-width:5em}
+  #pdfDocWrap .t1p-main{line-height:2}
+  #pdfDocWrap .pdf-val{vertical-align:middle}
   #pdfDocWrap .sign-space{height:40px}
   #pdfDocWrap .t3 td{height:auto;padding:3px 4px}
   #pdfDocWrap .t3 td .pdf-val-empty{min-width:1em}
@@ -711,7 +718,8 @@
     // 下拉選單 → 文字
     clone.querySelectorAll('select').forEach(function(el){
       var span=document.createElement('span');
-      var v=el.value||'';
+      var opt=el.options[el.selectedIndex];
+      var v=(opt&&opt.textContent&&opt.textContent.trim())?opt.textContent.trim():(el.value||'');
       if(v!==''){ span.className='pdf-val'; span.textContent=v; }
       else{ span.className='pdf-val-empty'; }
       el.parentNode.replaceChild(span,el);
@@ -723,6 +731,8 @@
       mark.textContent=el.checked?'✓':'';
       el.parentNode.replaceChild(mark,el);
     });
+    // 移除原本的 .box 疊加方格（避免雙重方格）
+    clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
     var wrap=document.getElementById('pdfDocWrap');
     wrap.innerHTML='';
     wrap.appendChild(clone);
