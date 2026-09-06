@@ -722,6 +722,8 @@
     function any(keys){ return keys.some(function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el&&el.checked; }); }
     var tn=document.querySelector('[data-key="teacherName"]');
     var tnOk=tn && tn.value.trim()!=='';
+    var fM=document.querySelector('[data-key="fillM"]'); var fD=document.querySelector('[data-key="fillD"]');
+    var dateOk=fM && fM.value!=='' && fD && fD.value!=='';
     var rows=courseBody.children.length;
     var feeOk=true, feeRows=[];
     for(var i=0;i<rows;i++){
@@ -744,7 +746,7 @@
       if(isNaN(start)||isNaN(end)) return null;
       return end>=start;
     }
-    return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk, period: periodOk()};
+    return {leave:any(leaveKeys), opt:any(optKeys), fee: feeOk, feeRows: feeRows, tnOk: tnOk, dateOk: dateOk, period: periodOk()};
   }
   function buildPdfDoc(){
     try{
@@ -864,7 +866,7 @@
     document.getElementById('zoomPct').textContent='適合視窗';
   });
   document.getElementById('pdfConfirm').addEventListener('click',function(){
-    if(pendingDoc){ pendingDoc.save('教師請假課務處理單.pdf'); }
+    if(pendingDoc){ pendingDoc.save('教師請假課務處理單.pdf'); var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); showToast(ios?'PDF 已存至「檔案」App 的「下載」資料夾（畫面下方）。':'PDF 已開始下載，請至通知欄或「下載」資料夾查看。'); }
     document.getElementById('pdfModal').style.display='none';
     showToast('PDF 已下載');
   });
@@ -876,6 +878,7 @@
     save();
     var v=validateChecks();
     var msgs=[];
+    if(!v.dateOk) msgs.push('請選擇「填寫日期」（月、日）');
     if(!v.tnOk) msgs.push('請填寫「請假教師」姓名');
     if(v.period===false) msgs.push('請假期間「結束時間」不能早於「開始時間」');
     if(!v.leave) msgs.push('請在「假別」至少勾選一項');
