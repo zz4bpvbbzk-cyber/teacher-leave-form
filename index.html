@@ -866,9 +866,23 @@
     document.getElementById('zoomPct').textContent='適合視窗';
   });
   document.getElementById('pdfConfirm').addEventListener('click',function(){
-    if(pendingDoc){ pendingDoc.save('教師請假課務處理單.pdf'); var ios=/iPhone|iPad|iPod/i.test(navigator.userAgent); showToast(ios?'PDF 已存至「檔案」App 的「下載」資料夾（畫面下方）。':'PDF 已開始下載，請至通知欄或「下載」資料夾查看。'); }
+    if(pendingDoc){
+      var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      if(isMobile){
+        // 手機：直接開啟 PDF（系統檢視器）→ 可用「分享」或「儲存到檔案」存放，一定看得到
+        try{
+          var blob=pendingDoc.output('blob');
+          var url=URL.createObjectURL(blob);
+          window.open(url,'_blank');
+          setTimeout(function(){ try{URL.revokeObjectURL(url);}catch(_){} },60000);
+          showToast('PDF 已開啟，請用畫面中的「分享」鈕儲存或傳送');
+        }catch(_){ pendingDoc.save('教師請假課務處理單.pdf'); showToast('已產生 PDF，請至「下載」資料夾查看'); }
+      }else{
+        pendingDoc.save('教師請假課務處理單.pdf');
+        showToast('PDF 已下載，請至「下載」資料夾查看');
+      }
+    }
     document.getElementById('pdfModal').style.display='none';
-    showToast('PDF 已下載');
   });
   document.getElementById('pdfCancel').addEventListener('click',function(){
     document.getElementById('pdfModal').style.display='none';
