@@ -364,9 +364,7 @@
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
   #pdfDocWrap .pdf-check{display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px !important;font-size:11px !important;font-weight:700;background:#fff;vertical-align:-2px;padding:0;margin:0;box-sizing:border-box}
-  #pdfDocWrap .ck{display:inline-flex;align-items:flex-start;gap:4px}
-  #pdfDocWrap .ck .pdf-check{flex:0 0 12px;margin-top:2px;width:12px !important;height:12px !important}
-  #pdfDocWrap .ck .txt{line-height:1.35;padding-top:0}
+  /* 已改為無flex自然排列 */
   #pdfDocWrap .t3 td{text-align:center;vertical-align:middle}
   #pdfDocWrap .t3 .pdf-val{min-width:30px}
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
@@ -742,7 +740,7 @@
         var mark=document.createElement('span');
         mark.textContent=snap.c?'✓':'';
         // 課務明細鐘點費小格 vs 其他：統一 12x12 正方
-        mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9px;font-weight:700;padding:0;margin:0;box-sizing:border-box;vertical-align:middle;background:#fff;';
+        mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9px;font-weight:700;padding:0;margin:2px 3px 0 0;box-sizing:border-box;vertical-align:top;background:#fff;';
         el.parentNode.replaceChild(mark,el);
         return;
       }
@@ -761,6 +759,14 @@
     });
     // ④ 移除殘留 .box 與樣式殘留
     clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
+    // ⑤ 拆掉 .ck 的 flexbox（html2canvas 對 flex 支援差）：
+    //    去 class，改自然 inline 排列，方格用 vertical-align 對齊第一行
+    clone.querySelectorAll('.ck').forEach(function(l){
+      l.removeAttribute('class');
+    });
+    clone.querySelectorAll('.txt').forEach(function(t){
+      t.style.display='inline';
+    });
     clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
     var wrap=document.getElementById('pdfDocWrap');
     if(!wrap){
