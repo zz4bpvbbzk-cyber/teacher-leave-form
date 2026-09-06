@@ -272,7 +272,7 @@
     .t1-sign .sign-space{height:20px}
     .type-grid{font-size:10.5px;gap:1px 6px}
     .t1-reason textarea{height:50px}
-    .t1p-main .prow{line-height:1.55}
+    .t1p-main .prow{white-space:normal;line-height:1.75}
     .t2 td{padding:4px 7px}
     .t2-right .opt{margin-bottom:2px}
     .rules-ol li{margin-bottom:2px}
@@ -351,7 +351,10 @@
     .top-meta{flex-direction:column;align-items:flex-start;gap:4px}
     .form-no{font-size:11px}
     .t1 td{padding:4px 5px}
-    .t1-sign{min-height:160px}
+    .t1-sign{min-height:0}
+    .t1-sign-inner{position:static;display:block;grid-template-rows:none}
+    .t1-sign-upper{border-bottom:1px dashed #000}
+    .t1-sign .sign-space{min-height:28px}
     .t1-sign-upper{padding:4px 5px !important}
     .t1-sign .cell-title input{width:6em}
     .t1-sign .sign-note{font-size:10.5px}
@@ -394,6 +397,7 @@
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
   #pdfDocWrap .duty-agent .pdf-val{min-width:5em}
   #pdfDocWrap .t1p-main{line-height:2}
+  #pdfDocWrap .t1p-main .prow{white-space:nowrap}
   #pdfDocWrap .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;font-size:10.5px;align-items:start}
   #pdfDocWrap .type-grid .ck{display:flex;align-items:flex-start;gap:4px;position:static;padding:0;margin:0;line-height:1.5}
   #pdfDocWrap .type-grid .ck .txt{display:block;flex:1;padding:0}
