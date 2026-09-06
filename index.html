@@ -932,13 +932,18 @@
     box.onclick=function(e){ if(e.target===box){ try{box.parentNode.removeChild(box);}catch(_){ } } };
   }
   function buildFileName(){
-    // 檔名: MMDD+姓名+請假課務處理單.pdf  (例: 0907張大山請假課務處理單.pdf)
+    // 檔名: 請假日(假期第一天)月日+姓名+請假課務處理單.pdf  (例: 0907張大山請假課務處理單.pdf)
     try{
-      var fM=document.querySelector('[data-key="fillM"]');
-      var fD=document.querySelector('[data-key="fillD"]');
-      var mm=(fM&&fM.value!=='')?String(fM.value).padStart(2,'0'):'';
-      var dd=(fD&&fD.value!=='')?String(fD.value).padStart(2,'0'):'';
-      if(!mm||!dd){ // 未填日期則用今天
+      // 請假日取「請假期間 自」的年/月/日 (sY/sM/sD)
+      var sY=document.querySelector('[data-key="sY"]');
+      var sM=document.querySelector('[data-key="sM"]');
+      var sD=document.querySelector('[data-key="sD"]');
+      var mm,dd;
+      if(sY&&sY.value!==''&&sM&&sM.value!==''&&sD&&sD.value!==''){
+        mm=String(sM.value).padStart(2,'0');
+        dd=String(sD.value).padStart(2,'0');
+      }else{
+        // 請假日尚未填 → 用今天
         var n=new Date(); mm=String(n.getMonth()+1).padStart(2,'0'); dd=String(n.getDate()).padStart(2,'0');
       }
       var name=document.querySelector('[data-key="teacherName"]');
