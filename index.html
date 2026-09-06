@@ -263,7 +263,7 @@
     select{padding:0 1px !important}
     .t3 th{background:#fff !important}
     .save-hint{display:none}
-    .stamp-space{height:50px}
+    .stamp-space{height:60px}
     .t1-sign{min-height:0}
     .t1-sign .sign-space{min-height:18px}
     .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
@@ -296,7 +296,7 @@
   .pdf-capture .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
   .pdf-capture .duty-agent input[type="text"]{background:transparent !important;border:1px dashed #000 !important;width:5em;padding:0}
   .pdf-capture .t3 th{background:#fff !important}
-  .pdf-capture .stamp-space{height:18px}
+  .pdf-capture .stamp-space{height:55px}
   .pdf-capture .t1 td{padding:4px 6px}
   .pdf-capture .t2 td{padding:4px 7px}
   .pdf-capture .t2-right .opt{margin-bottom:2px}
@@ -463,14 +463,14 @@
           <div class="t1-sign-upper">
             <div class="cell-title">請假教師 <input data-key="teacherName" type="text" placeholder="請輸入姓名"></div>
             <div class="sign-space"></div>
-            <div class="sign-note">（已確認線上送出假單，請簽名勿蓋章）</div>
+            <div class="sign-note">已確認線上送出假單<br><strong>請簽名勿蓋章</strong></div>
           </div>
           <div class="t1-sign-lower">
             <div class="fill-date">填寫日期：<select data-key="fillM"></select> 月 <select data-key="fillD"></select> 日</div>
           </div>
           </div>
         </td>
-        <td class="t1-type" style="width:40%">
+        <td class="t1-type" style="width:52%">
           <div class="cell-title">假別（以下請勾選 V）</div>
           <div class="type-grid">
             <label class="ck"><input data-key="type1" type="checkbox"><span class="box"></span><span class="txt">出差（派代，請檢附公文或簽案依據）</span></label>
@@ -487,7 +487,7 @@
             <label class="ck"><input data-key="type12" type="checkbox"><span class="box"></span><span class="txt">其他（<input data-key="typeOther" class="w6" type="text">）</span></label>
           </div>
         </td>
-        <td class="t1-reason">
+        <td class="t1-reason" style="width:22%">
           <div class="cell-title">請假事由</div>
           <textarea data-key="reason" placeholder="請簡述請假事由…"></textarea>
         </td>
