@@ -445,7 +445,7 @@
   <div class="pdf-modal-box">
     <h3>PDF 預覽</h3>
     <p id="pdfProg">請確認表單內容正確無誤後，再下載。</p>
-    <div class="pdf-preview-wrap"><img id="pdfImg" alt="PDF 預覽"></div>
+    <div class="pdf-preview-wrap"><div id="pdfImg"></div></div>
     <div class="pdf-zoom"><button class="btn ghost" id="zoomOut">－ 縮小</button>
     <span id="zoomPct">100%</span>
     <button class="btn ghost" id="zoomIn">＋ 放大</button>
@@ -753,10 +753,22 @@
     var start=new Date(+sY,+sM-1,+sD,+sH,+sMin);
     var end=new Date(+eY,+eM-1,+eD,+eH,+eMin);
     if(isNaN(start)||isNaN(end)){ disp.textContent='＿ 日 ＿ 時'; return; }
-    var hrs=(end-start)/3600000;
-    if(hrs<0) hrs=0;
-    var days=Math.floor(hrs/24);
-    var rem=Math.round((hrs-days*24)*10)/10;
+    // 校規：每日以 08:00–16:00 計（8 小時=1 日）；16:00 後不累計；週六日不計
+    var total=0;
+    var cur=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+    var last=new Date(end.getFullYear(),end.getMonth(),end.getDate());
+    while(cur<=last){
+      var dow=cur.getDay();
+      if(dow!==0&&dow!==6){
+        var ds=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate(),8,0,0);
+        var de=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate(),16,0,0);
+        var s2=start>ds?start:ds, e2=end<de?end:de;
+        if(e2>s2) total+=(e2-s2)/3600000;
+      }
+      cur.setDate(cur.getDate()+1);
+    }
+    var days=Math.floor(total/8+1e-9);
+    var rem=Math.round((total-days*8)*10)/10;
     disp.textContent=days+' 日 '+rem+' 時';
   }
 
@@ -806,12 +818,8 @@
   function buildPdfDoc(){
     try{
     var src=document.querySelector('.form-sheet');
-    // ① 先同步計算總時數（確保「日(時)數共計」為最新值）
-    try{ computeTotal(); }catch(_){}
     // ① 快照：從原始 DOM 讀取所有欄位值（key→value/checked）
     var snapshot={};
-    var td=document.getElementById('totalDisplay');
-    if(td) snapshot['__total__']=td.textContent;
     src.querySelectorAll('[data-key]').forEach(function(el){
       if(el.type==='checkbox'){ snapshot[el.dataset.key]={c:el.checked}; }
       else if(el.tagName==='SELECT'){
@@ -821,46 +829,40 @@
       }
       else{ snapshot[el.dataset.key]={v:el.value}; }
     });
-    // ② 複製
-    var clone=src.cloneNode(true);
-    function isCourseRow(k){ return /^c[0-9]+_/.test(k); }
-    // ③ 依快照還原（不信任 clone 的 select 狀態）
-    if(snapshot['__total__']!==undefined){
-      var clt=clone.querySelector('#totalDisplay');
-      if(clt) clt.textContent=snapshot['__total__'];
+    function sv(k){ var s2=snapshot[k]; return s2&&s2.v!==undefined?String(s2.v||'').trim():''; }
+    // ② 請假日列表：每日 08:00–16:00 計（16:00 後不累計、週六日不計）→ 一天一張
+    var start=new Date(+sv('sY'),+sv('sM')-1,+sv('sD'),+(sv('sH')||'0'),+(sv('sMin')||'0'));
+    var end=new Date(+sv('eY'),+sv('eM')-1,+sv('eD'),+(sv('eH')||'0'),+(sv('eMin')||'0'));
+    if(isNaN(start)||isNaN(end)||end<start){
+      var now=new Date();
+      start=new Date(now.getFullYear(),now.getMonth(),now.getDate(),8,0,0);
+      end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),16,0,0);
     }
-    clone.querySelectorAll('[data-key]').forEach(function(el){
-      var snap=snapshot[el.dataset.key];
-      if(!snap) { el.parentNode.removeChild(el); return; }
-      if(el.type==='checkbox'){
-        var mark=document.createElement('span');
-        mark.textContent=snap.c?'✓':'';
-        // 課務明細鐘點費小格 vs 其他：統一 12x12 正方
-        mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9px;font-weight:700;padding:0;margin:2px 3px 0 0;box-sizing:border-box;vertical-align:top;background:#fff;';
-        el.parentNode.replaceChild(mark,el);
-        return;
+    var dayList=[];
+    var cur=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+    var last=new Date(end.getFullYear(),end.getMonth(),end.getDate());
+    while(cur<=last && dayList.length<31){
+      var dow=cur.getDay();
+      if(dow!==0&&dow!==6){
+        var ds=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate(),8,0,0);
+        var de=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate(),16,0,0);
+        var a=start>ds?start:ds, b=end<de?end:de;
+        if(b>a){
+          var hrs=(b-a)/3600000;
+          var dday=Math.floor(hrs/8+1e-9), rrem=Math.round((hrs-dday*8)*10)/10;
+          dayList.push({start:a,end:b,txt:dday+' 日 '+rrem+' 時'});
+        }
       }
-      var val=(snap.v?String(snap.v):'').trim();
-      var span=document.createElement('span');
-      var course=isCourseRow(el.dataset.key);
-      if(val!==''){
-        span.textContent=val;
-        span.style.cssText='display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;line-height:1.4;';
-      }else{
-        // 空白：課務明細列不留底線（完全空白）；其他欄位保留底線
-        if(course){ span.textContent=''; span.style.cssText='display:inline-block;min-width:1.6em;'; }
-        else{ span.textContent=''; span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
-      }
-      el.parentNode.replaceChild(span,el);
-    });
-    // ④ 移除殘留 .box 與樣式殘留
-    clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
-    // ⑤ 保留 .ck class（讓對齊樣式生效）；僅移除可能干擾的 inline input 樣式屬性
-    clone.querySelectorAll('.ck').forEach(function(l){
-      l.style.cssText='';
-      l.removeAttribute('disabled');
-    });
-    clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
+      cur.setDate(cur.getDate()+1);
+    }
+    if(!dayList.length){
+      dayList.push({start:new Date(start.getFullYear(),start.getMonth(),start.getDate(),8,0,0),
+                    end:new Date(start.getFullYear(),start.getMonth(),start.getDate(),16,0,0),
+                    txt:'＿ 日 ＿ 時'});
+    }
+    // ③ 每個請假日產生一張副本（期間/共計改為當日；課務明細只留當日列）
+    function fmtD(d){ return d.getFullYear()+' 年 '+(d.getMonth()+1)+' 月 '+d.getDate()+' 日 '+d.getHours()+' 時 '+d.getMinutes()+' 分'; }
+    function isCourseRow(k){ return /^c[0-9]+_/.test(k); }
     var wrap=document.getElementById('pdfDocWrap');
     if(!wrap){
       wrap=document.createElement('div');
@@ -870,9 +872,59 @@
       document.body.appendChild(wrap);
     }
     while(wrap.firstChild) wrap.removeChild(wrap.firstChild);
-    wrap.appendChild(clone);
-    var got=wrap.querySelector('.form-sheet');
-    return got;
+    var sheets=[];
+    dayList.forEach(function(day,di){
+      var clone=src.cloneNode(true);
+      function rowMatch(k){
+        var m=k.match(/^c([0-9]+)_/); if(!m) return null;
+        var idx=m[1];
+        var rm=sv('c'+idx+'_m'), rd=sv('c'+idx+'_d');
+        var hasData=['m','d','w','period','class','subj','amt'].some(function(f2){ return sv('c'+idx+'_'+f2)!==''; });
+        if(!hasData) return null;
+        if(rm===''||rd==='') return (di===0);
+        return (parseInt(rm,10)===(day.start.getMonth()+1) && parseInt(rd,10)===day.start.getDate());
+      }
+      clone.querySelectorAll('[data-key]').forEach(function(el){
+        var k=el.dataset.key;
+        var snap=snapshot[k];
+        if(isCourseRow(k) && rowMatch(k)===false){ snap={c:false,v:''}; }
+        if(!snap){ el.parentNode.removeChild(el); return; }
+        if(el.type==='checkbox'){
+          var mark=document.createElement('span');
+          mark.textContent=snap.c?'✓':'';
+          mark.style.cssText='display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px;font-size:9px;font-weight:700;padding:0;margin:2px 3px 0 0;box-sizing:border-box;vertical-align:top;background:#fff;';
+          el.parentNode.replaceChild(mark,el);
+          return;
+        }
+        var val=(snap.v?String(snap.v):'').trim();
+        var span=document.createElement('span');
+        var course=isCourseRow(k);
+        if(val!==''){
+          span.textContent=val;
+          span.style.cssText='display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;line-height:1.4;';
+        }else{
+          if(course){ span.textContent=''; span.style.cssText='display:inline-block;min-width:1.6em;'; }
+          else{ span.textContent=''; span.style.cssText='display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom;'; }
+        }
+        el.parentNode.replaceChild(span,el);
+      });
+      var prows=clone.querySelectorAll('.prow');
+      if(prows.length>=2){
+        prows[0].textContent='自 '+fmtD(day.start)+' 起';
+        prows[1].textContent='至 '+fmtD(day.end)+' 止';
+      }
+      var clt=clone.querySelector('#totalDisplay');
+      if(clt) clt.textContent=day.txt;
+      clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
+      clone.querySelectorAll('.ck').forEach(function(l){
+        l.style.cssText='';
+        l.removeAttribute('disabled');
+      });
+      clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
+      wrap.appendChild(clone);
+      sheets.push(clone);
+    });
+    return sheets;
     }catch(err){
       var m=err&&err.message?err.message:String(err);
       throw new Error('建立副本失敗('+m+')');
@@ -881,45 +933,33 @@
   var pendingDoc=null;
   var zoomLv=1;
   function fitZoom(){
-    var img=document.getElementById('pdfImg');
-    var w=window.innerWidth*0.5;
     zoomLv=1;
-    img.style.width='100%';
+    document.querySelectorAll('#pdfImg img').forEach(function(im){ im.style.width='100%'; im.style.maxWidth='100%'; });
+    var z=document.getElementById('zoomPct'); if(z) z.textContent='適合視窗';
   }
   function applyZoom(){
-    var img=document.getElementById('pdfImg');
     var base=680;
-    img.style.width=Math.round(base*zoomLv)+'px';
-    img.style.maxWidth='none';
-    document.getElementById('zoomPct').textContent=Math.round(zoomLv*100)+'%';
+    document.querySelectorAll('#pdfImg img').forEach(function(im){ im.style.width=Math.round(base*zoomLv)+'px'; im.style.maxWidth='none'; });
+    var z=document.getElementById('zoomPct'); if(z) z.textContent=Math.round(zoomLv*100)+'%';
   }
-  function showPreview(imgData,doc){
+  function showPreview(imgs,doc){
     pendingDoc=doc;
-    document.getElementById('pdfImg').src=imgData;
-    document.getElementById('pdfProg').textContent='已產生 PDF 預覽，可用下方按鈕放大檢查內容，確認無誤後再下載。';
-    zoomLv=1; applyZoom();
-    document.getElementById('pdfModal').style.display='flex';
-  }
-  function showPreview(imgData,doc){
-    pendingDoc=doc;
-    document.getElementById('pdfImg').src=imgData;
-  var pw=document.querySelector('.pdf-preview-wrap');
-  if(pw) pw.classList.remove('zoomed');
-  document.getElementById('pdfImg').onclick=function(){
-    pw.classList.toggle('zoomed');
-    pw.scrollTop=0;
-  };
-    document.getElementById('pdfProg').textContent='已產生 PDF 預覽，請確認內容正確無誤後再下載。';
+    var list=Array.isArray(imgs)?imgs:[imgs];
+    var wrap=document.getElementById('pdfImg');
+    var html='';
+    list.forEach(function(src2,i){
+      html+='<img src="'+src2+'" alt="PDF 第'+(i+1)+'頁" style="display:block;margin:0 auto 10px;box-shadow:0 2px 8px rgba(0,0,0,.2)">';
+    });
+    if(list.length>1) html='<div style="text-align:center;font-weight:700;margin-bottom:8px">共 '+list.length+' 頁（1 日 1 張）</div>'+html;
+    wrap.innerHTML=html;
+    document.getElementById('pdfProg').textContent='已產生 PDF 預覽'+(list.length>1?('（共 '+list.length+' 頁，1 日 1 張）'):'')+'，請確認內容正確無誤後再下載。';
+    zoomLv=1;
+    setTimeout(applyZoom,0);
     document.getElementById('pdfModal').style.display='flex';
   }
   document.getElementById('zoomIn').addEventListener('click',function(){ zoomLv=Math.min(zoomLv+0.25,3); applyZoom(); });
   document.getElementById('zoomOut').addEventListener('click',function(){ zoomLv=Math.max(zoomLv-0.25,0.25); applyZoom(); });
-  document.getElementById('zoomFit').addEventListener('click',function(){
-    zoomLv=1;
-    var img=document.getElementById('pdfImg');
-    img.style.width='100%'; img.style.maxWidth='100%';
-    document.getElementById('zoomPct').textContent='適合視窗';
-  });
+  document.getElementById('zoomFit').addEventListener('click',function(){ fitZoom(); });
   function showIosGuide(){
     // 移除舊的引導 (若存在)
     var ex=document.getElementById('iosGuide'); if(ex) ex.parentNode.removeChild(ex);
@@ -1029,21 +1069,34 @@
     .then(function(){
       // 清除頁面上任何殘留 iframe(舊版預覽殘留/擴充功能注入), 避免跨域 frame 錯誤
       try{ document.querySelectorAll('iframe').forEach(function(fr){ fr.parentNode&&fr.parentNode.removeChild(fr); }); }catch(_){}
-      var pdfSheet=buildPdfDoc();
-      return html2canvas(pdfSheet,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&el.tagName==='IFRAME'; }});
+      var sheets=buildPdfDoc();
+      var canvases=[];
+      var chain=Promise.resolve();
+      sheets.forEach(function(sh){
+        chain=chain.then(function(){
+          return html2canvas(sh,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&el.tagName==='IFRAME'; }})
+            .then(function(c){ canvases.push(c); });
+        });
+      });
+      return chain.then(function(){ return canvases; });
     })
-    .then(function(canvas){
-      var img=canvas.toDataURL('image/png');
+    .then(function(canvases){
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-      var imgW=canvas.width, imgH=canvas.height;
-      // 等比縮放至 A4 可用範圍（四周留 10mm 邊）
-      var availW=210-6, availH=297-10;
-      var k=Math.min(availW/imgW, availH/imgH);
-      var w=imgW*k, h=imgH*k;
-      var x=(210-w)/2, y=(297-h)/2;
-      doc.addImage(img,'PNG',x,y,w,h);
+      var imgs=[];
+      canvases.forEach(function(canvas,i){
+        var img=canvas.toDataURL('image/png');
+        imgs.push(img);
+        if(i>0) doc.addPage();
+        var imgW=canvas.width, imgH=canvas.height;
+        // 等比縮放至 A4 可用範圍（左右3mm/上下5mm）
+        var availW=210-6, availH=297-10;
+        var k=Math.min(availW/imgW, availH/imgH);
+        var w=imgW*k, h=imgH*k;
+        var x=(210-w)/2, y=(297-h)/2;
+        doc.addImage(img,'PNG',x,y,w,h);
+      });
       body.classList.remove('pdf-capture');
-      showPreview(img,doc);
+      showPreview(imgs,doc);
     })
     .catch(function(err){
       body.classList.remove('pdf-capture');
