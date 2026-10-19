@@ -31,12 +31,15 @@
   if (duty && !document.getElementById('subTeacher')) {
     var wrap = document.createElement('div');
     wrap.className = 'opt';
+        wrap.className = 'opt';
     wrap.innerHTML =
-      '<label class="ck">' +
-      '<span class="box" style="visibility:hidden"></span>' +
-      '<span class="txt"><strong>代課教師（鐘點費受領人）：</strong></span>' +
-      '<input id="subTeacher" type="text" placeholder="請輸入代課教師姓名" style="width:10em">' +
+      '<label class="ck" style="display:flex;align-items:center;gap:4px">' +
+      '<input id="subTeacher" type="text" placeholder="請輸入代課教師姓名" ' +
+      'style="all:unset;display:inline-block;width:10em;height:1.6em;position:static;opacity:1;' +
+      'pointer-events:auto;background:#fff;border:1px dashed #888;border-radius:3px;' +
+      'padding:2px 6px;font:inherit;color:#000;box-sizing:content-box">' +
       '</label>';
+
     duty.parentNode.insertBefore(wrap, duty.nextSibling);
 
     // 代課教師姓名自動記憶（跟表單原本的自動儲存行為一致）
