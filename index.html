@@ -838,6 +838,8 @@
     var dirty=false;
     try{
       document.querySelectorAll('[data-key]').forEach(function(el){
+        var kk=el.dataset.key||'';
+        if(/^c[0-9]+_/.test(kk)) return;
         if(el.type==='checkbox'){ if(el.checked) dirty=true; }
         else{ if(String(el.value||'').trim()!=='') dirty=true; }
       });
@@ -1292,7 +1294,7 @@
   document.body.appendChild(dl);
   var tn=document.querySelector('[data-key="teacherName"]');
   if(tn){ tn.setAttribute('list','teacherList'); tn.addEventListener('change',function(){ try{applyTimetable();}catch(_){} }); tn.addEventListener('input',function(){ try{applyTimetable();}catch(_){} }); }
-  if(/[?&]demo/.test(location.search)||true){
+  if(/[?&]demo/.test(location.search)){
     try{ localStorage.removeItem(STORE_KEY); }catch(_){}
     var q=function(k,v){ var el=document.querySelector('[data-key="'+k+'"]'); if(el) el.value=String(v); };
     q('teacherName','林雅萍'); q('sY','2026'); q('sM','10'); q('sD','19'); q('sH','8'); q('sMin','0');
