@@ -1228,7 +1228,7 @@
   });
   document.addEventListener('input',function(e){
     if(e.target.matches('[data-key]')&&PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){
-      computeTotal(); periodErrorCheck();
+      computeTotal(); periodErrorCheck(); buildSections(false);
     }
   });
 
