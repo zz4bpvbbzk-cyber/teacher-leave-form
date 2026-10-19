@@ -466,14 +466,13 @@
   <div class="spacer"></div>
   <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存<span id="saveTime"></span></span>
   <button class="btn ghost" id="clearBtn">清除重填</button>
-  <button class="btn outline" id="addRow">＋ 新增課務列</button>
-  
+    
   <button class="btn ink" id="pdfBtn">⬇ 下載 PDF</button>
 </header>
 
 <div class="steps">
   <span class="step"><span class="n">1</span>填寫請假資訊</span><span class="arrow">→</span>
-  <span class="step"><span class="n">2</span>新增課務列、填妥代課資料</span><span class="arrow">→</span>
+  <span class="step"><span class="n">2</span>填妥代課資料（共 7 列）</span><span class="arrow">→</span>
   <span class="step"><span class="n">3</span>按「列印表單」</span><span class="arrow">→</span>
   <span class="step"><span class="n">4</span>手寫簽名後送教學組、教務主任核章</span>
   
@@ -586,8 +585,7 @@
     </table>
     </div>
     <div class="row-actions screen-only">
-      <button class="btn outline" id="addRow2">＋ 新增課務列</button>
-      <span class="tip">說明第 3 點：課務處理欄位若不敷使用得自行增列。</span>
+            <span class="tip">說明第 3 點：課務處理欄位若不敷使用得自行增列。</span>
     </div>
 
     <!-- 第四區：說明 -->
@@ -699,7 +697,7 @@
     try{ data=JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){}
     if(!data) return;
     var rows=parseInt(data.rows,10);
-    setRows(isNaN(rows)||rows<1?5:rows);
+    setRows(isNaN(rows)||rows<1?7:Math.max(7,rows));
     document.querySelectorAll('[data-key]').forEach(function(el){
       if(!(el.dataset.key in data)) return;
       if(el.type==='checkbox'){ el.checked=!!data[el.dataset.key]; }
@@ -719,7 +717,7 @@
         else{ if(String(el.value||'').trim()!=='') dirty=true; }
       });
       var rows=document.getElementById('courseBody');
-      if(rows && rows.children.length>5) dirty=true; // 有新增課務列
+      if(rows && rows.children.length>7) dirty=true; // 超過7列視為有資料
     }catch(e){}
     if(!dirty) return; // 沒有先前資料，不需警示
     var box=document.createElement('div');
@@ -767,8 +765,6 @@
     save();
   }
 
-  document.getElementById('addRow').addEventListener('click',addRow);
-  document.getElementById('addRow2').addEventListener('click',addRow);
   function showToast(msg){
     var t=document.getElementById('toast');
     t.textContent=msg; t.classList.add('show');
@@ -1077,7 +1073,7 @@
 
   document.getElementById('clearBtn').addEventListener('click',function(){
     if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
-    setRows(5);
+    setRows(7);
     document.querySelectorAll('[data-key]').forEach(function(el){
       if(el.type==='checkbox'){ el.checked=false; }
       else if(el.tagName==='SELECT'){ el.selectedIndex=0; }
@@ -1110,7 +1106,7 @@
     }
   });
 
-  setRows(5);
+  setRows(7);
   load();
   save();
 })();
