@@ -1013,7 +1013,7 @@
       // 清除頁面上任何殘留 iframe(舊版預覽殘留/擴充功能注入), 避免跨域 frame 錯誤
       try{ document.querySelectorAll('iframe').forEach(function(fr){ fr.parentNode&&fr.parentNode.removeChild(fr); }); }catch(_){}
       var pdfSheet=buildPdfDoc();
-      return html2canvas(pdfSheet,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&(el.tagName==='IFRAME'||el.id==='pdfDocWrap'); }});
+      return html2canvas(pdfSheet,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&el.tagName==='IFRAME'; }});
     })
     .then(function(canvas){
       var img=canvas.toDataURL('image/png');
