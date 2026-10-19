@@ -19,7 +19,7 @@
 
   /* ================= ① 設定區（唯一要改的地方） ================= */
   var CONFIG = {
-    URL: 'https://script.google.com/macros/s/AKfycbhttps://script.google.com/macros/s/AKfycbyq5UybXN7ixC72EyMDEfO4c5uPkTmC67XdB9iCFvFHcQW51f_30qUa24--3tHXtcnQzw/exec/exec',
+      URL: 'https://script.google.com/macros/s/AKfycbyq5UybXN7ixC72EyMDEfO4c5uPkTmC67XdB9iCFvFHcQW51f_30qUa24--3tHXtcnQzw/exec',
   };
  
   /* ================= 以下不用改 ================= */
