@@ -341,6 +341,9 @@
   .pdf-capture .t1p-total-value{font-size:12.0px}
   .pdf-capture .t2-right .opt .ck .txt{font-size:14.0px}
 
+  .day-head{font-weight:700;font-size:14px;margin:10px 0 4px;padding:3px 8px;background:#f4f0e6;border-left:4px solid #000;text-align:left}
+  .pdf-capture .day-head{margin:6px 0 3px}
+
   /* PDF 預覽 Modal */
   .pdf-modal{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px}
   .pdf-modal-box{background:#fff;border-radius:12px;padding:22px;max-width:820px;width:100%;max-height:94vh;display:flex;flex-direction:column;gap:10px;box-shadow:0 20px 60px rgba(0,0,0,.4);overflow:auto}
@@ -570,23 +573,8 @@
     </table>
 
     <!-- 第三區：課務明細表 -->
-    <div class="sec-title">需代課之課務明細</div>
-    <div class="t3-wrap">
-    <table class="t3">
-      <colgroup>
-        <col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:19%">
-      </colgroup>
-      <thead>
-        <tr>
-          <th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目<br>（整日請寫包班）</th><th>鐘點費<br>由總務處轉</th><th>鐘點費<br>自理</th><th>鐘點費或日薪金額</th><th>代理（課）<br>教師簽名</th>
-        </tr>
-      </thead>
-      <tbody id="courseBody"></tbody>
-    </table>
-    </div>
-    <div class="row-actions screen-only">
-            <span class="tip">說明第 3 點：課務處理欄位若不敷使用得自行增列。</span>
-    </div>
+    <div class="sec-title">需代課之課務明細（依請假日自動分區，每天 7 列）</div>
+    <div id="daySections"></div>
 
     <!-- 第四區：說明 -->
     <div class="rules">
@@ -622,7 +610,31 @@
 <script>
 (function(){
   var STORE_KEY='xinxing-leave-form-v1';
-  var courseBody=document.getElementById('courseBody');
+  var daySections=document.getElementById('daySections');
+  var DAY_DATES=[]; var LAST_DAYS_KEY='';
+  function readPeriod(){
+    function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
+    var sY=v('sY'),sM=v('sM'),sD=v('sD'),eY=v('eY'),eM=v('eM'),eD=v('eD');
+    var sH=v('sH')||'0',sMin=v('sMin')||'0',eH=v('eH')||'0',eMin=v('eMin')||'0';
+    if(!sY||!sM||!sD||!eY||!eM||!eD) return null;
+    var start=new Date(+sY,+sM-1,+sD,+sH,+sMin);
+    var end=new Date(+eY,+eM-1,+eD,+eH,+eMin);
+    if(isNaN(start)||isNaN(end)||end<start) return null;
+    return {start:start,end:end};
+  }
+  function listLeaveDays(){
+    var p=readPeriod();
+    if(!p) return [null];
+    var out=[];
+    var cur=new Date(p.start.getFullYear(),p.start.getMonth(),p.start.getDate());
+    var last=new Date(p.end.getFullYear(),p.end.getMonth(),p.end.getDate());
+    while(cur<=last && out.length<31){
+      var dow=cur.getDay();
+      if(dow!==0&&dow!==6) out.push(new Date(cur));
+      cur.setDate(cur.getDate()+1);
+    }
+    return out.length?out:[null];
+  }
   var PERIOD_KEYS=['sY','sM','sD','sH','sMin','eY','eM','eD','eH','eMin'];
 
   /* ---- 下拉式選單選項 ---- */
@@ -652,28 +664,94 @@
   ['sMin','eMin'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MINS,'分');});
 
   /* ---- 課務明細列 ---- */
-  function rowHtml(i){
+  function rowHtml(G,mv,dv){
+    var ro=(mv!=='')?' readonly':'';
     return '<tr>'
-      +'<td><input data-key="c'+i+'_m" type="text"></td>'
-      +'<td><input data-key="c'+i+'_d" type="text"></td>'
-      +'<td><input data-key="c'+i+'_w" type="text"></td>'
-      +'<td><input data-key="c'+i+'_period" type="text"></td>'
-      +'<td><input data-key="c'+i+'_class" type="text"></td>'
-      +'<td><input data-key="c'+i+'_subj" type="text"></td>'
-      +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee1" type="checkbox"><span class="box"></span></label></td>'
-      +'<td class="ckcell"><label class="ck"><input data-key="c'+i+'_fee2" type="checkbox"><span class="box"></span></label></td>'
-      +'<td><input data-key="c'+i+'_amt" type="text"></td>'
+      +'<td><input data-key="c'+G+'_m" type="text" value="'+mv+'"'+ro+'></td>'
+      +'<td><input data-key="c'+G+'_d" type="text" value="'+dv+'"'+ro+'></td>'
+      +'<td><input data-key="c'+G+'_w" type="text"></td>'
+      +'<td><input data-key="c'+G+'_period" type="text"></td>'
+      +'<td><input data-key="c'+G+'_class" type="text"></td>'
+      +'<td><input data-key="c'+G+'_subj" type="text"></td>'
+      +'<td class="ckcell"><label class="ck"><input data-key="c'+G+'_fee1" type="checkbox"><span class="box"></span></label></td>'
+      +'<td class="ckcell"><label class="ck"><input data-key="c'+G+'_fee2" type="checkbox"><span class="box"></span></label></td>'
+      +'<td><input data-key="c'+G+'_amt" type="text"></td>'
       +'<td class="sig-cell"></td>'
       +'</tr>';
   }
-  function setRows(n){
-    courseBody.innerHTML='';
-    for(var i=0;i<n;i++){ courseBody.insertAdjacentHTML('beforeend',rowHtml(i)); }
+  function buildSections(force){
+    var days=listLeaveDays();
+    var key=days.map(function(d){return d?(d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()):'x';}).join('|');
+    if(!force && key===LAST_DAYS_KEY) return;
+    LAST_DAYS_KEY=key;
+    var saved=collect();
+    daySections.innerHTML='';
+    DAY_DATES=days.map(function(d){ return d?{y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate(),dow:d.getDay()}:null; });
+    var wk=['日','一','二','三','四','五','六'];
+    days.forEach(function(d,di){
+      var headTxt=d?('第 '+(di+1)+' 天：'+(d.getMonth()+1)+' 月 '+d.getDate()+' 日（週'+wk[d.getDay()]+'）'):('第 '+(di+1)+' 天');
+      var rows='';
+      for(var r=0;r<7;r++){
+        var G=di*7+r;
+        rows+=rowHtml(G, d?String(d.getMonth()+1):'', d?String(d.getDate()):'');
+      }
+      var sec=document.createElement('div');
+      sec.className='day-sec';
+      sec.innerHTML='<div class="day-head">'+headTxt+'</div>'
+        +'<div class="t3-wrap"><table class="t3"><colgroup>'
+        +'<col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:11%"><col style="width:10%"><col style="width:14%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:19%">'
+        +'</colgroup><thead><tr>'
+        +'<th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目<br>（整日請寫包班）</th><th>鐘點費<br>由總務處轉</th><th>鐘點費<br>自理</th><th>鐘點費或日薪金額</th><th>代理（課）<br>教師簽名</th>'
+        +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+      daySections.appendChild(sec);
+    });
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      var k=el.dataset.key;
+      if(/^c[0-9]+_/.test(k)) return;
+      if(k in saved){ if(el.type==='checkbox'){ el.checked=!!saved[k]; } else { el.value=saved[k]==null?'':saved[k]; } }
+    });
+    redistribute(saved);
+    save();
+  }
+  function redistribute(data){
+    if(!data) return;
+    var recs=[];
+    for(var g=0; g<400; g++){
+      var base='c'+g+'_';
+      if(data[base+'m']===undefined && data[base+'d']===undefined && data[base+'period']===undefined && data[base+'amt']===undefined) continue;
+      var rec={m:String(data[base+'m']||''),d:String(data[base+'d']||''),w:String(data[base+'w']||''),period:String(data[base+'period']||''),cls:String(data[base+'class']||''),subj:String(data[base+'subj']||''),f1:!!data[base+'fee1'],f2:!!data[base+'fee2'],amt:String(data[base+'amt']||'')};
+      if(rec.m||rec.d||rec.w||rec.period||rec.cls||rec.subj||rec.amt||rec.f1||rec.f2) recs.push(rec);
+    }
+    if(!recs.length) return;
+    var total=DAY_DATES.length*7;
+    var used={};
+    function fill(G,rec){
+      var b='c'+G+'_';
+      function set(sf,v2){ var el=document.querySelector('[data-key="'+b+sf+'"]'); if(el) el.value=v2; }
+      set('m',rec.m); set('d',rec.d); set('w',rec.w); set('period',rec.period); set('class',rec.cls); set('subj',rec.subj); set('amt',rec.amt);
+      var e1=document.querySelector('[data-key="'+b+'fee1"]'), e2=document.querySelector('[data-key="'+b+'fee2"]');
+      if(e1) e1.checked=rec.f1;
+      if(e2) e2.checked=rec.f2;
+      used[G]=true;
+    }
+    recs.forEach(function(rec){
+      if(rec.m===''||rec.d==='') return;
+      var mi=parseInt(rec.m,10), di2=parseInt(rec.d,10);
+      for(var di=0; di<DAY_DATES.length; di++){
+        var dd2=DAY_DATES[di]; if(!dd2) continue;
+        if(dd2.m===mi && dd2.d===di2){
+          for(var r2=0;r2<7;r2++){ var G=di*7+r2; if(!used[G]){ fill(G,rec); return; } }
+        }
+      }
+    });
+    recs.forEach(function(rec){
+      for(var G=0; G<total; G++){ if(!used[G]){ fill(G,rec); return; } }
+    });
   }
 
   /* ---- 儲存 / 讀取 ---- */
   function collect(){
-    var data={rows:courseBody.children.length};
+    var data={days:DAY_DATES.length};
     document.querySelectorAll('[data-key]').forEach(function(el){
       if(el.type==='checkbox'){ data[el.dataset.key]=el.checked; }
       else{ data[el.dataset.key]=el.value; }
@@ -696,13 +774,21 @@
     var data=null;
     try{ data=JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){}
     if(!data) return;
-    var rows=parseInt(data.rows,10);
-    setRows(isNaN(rows)||rows<1?7:Math.max(7,rows));
-    document.querySelectorAll('[data-key]').forEach(function(el){
-      if(!(el.dataset.key in data)) return;
-      if(el.type==='checkbox'){ el.checked=!!data[el.dataset.key]; }
-      else{ el.value=data[el.dataset.key]==null?'':data[el.dataset.key]; }
+    ['sY','sM','sD','sH','sMin','eY','eM','eD','eH','eMin'].forEach(function(k){
+      var el=document.querySelector('[data-key="'+k+'"]');
+      if(el && data[k]!=null && data[k]!==''){ el.value=String(data[k]); }
     });
+    buildSections(true);
+    document.querySelectorAll('[data-key]').forEach(function(el){
+      var k=el.dataset.key;
+      if(/^c[0-9]+_/.test(k)) return;
+      if(!(k in data)) return;
+      if(el.type==='checkbox'){ el.checked=!!data[k]; }
+      else{ el.value=data[k]==null?'':data[k]; }
+    });
+    redistribute(data);
+    try{ computeTotal(); periodErrorCheck(); }catch(_){}
+    save();
     checkStoredPrivacy();
   }
 
@@ -716,8 +802,10 @@
         if(el.type==='checkbox'){ if(el.checked) dirty=true; }
         else{ if(String(el.value||'').trim()!=='') dirty=true; }
       });
-      var rows=document.getElementById('courseBody');
-      if(rows && rows.children.length>7) dirty=true; // 超過7列視為有資料
+      document.querySelectorAll('[data-key^="c"]').forEach(function(el){
+        if(el.type==='checkbox'){ if(el.checked) dirty=true; }
+        else if(String(el.value||'').trim()!=='' && !el.readOnly) dirty=true;
+      });
     }catch(e){}
     if(!dirty) return; // 沒有先前資料，不需警示
     var box=document.createElement('div');
@@ -772,11 +860,6 @@
     disp.textContent=days+' 日 '+rem+' 時';
   }
 
-  function addRow(){
-    courseBody.insertAdjacentHTML('beforeend',rowHtml(courseBody.children.length));
-    save();
-  }
-
   function showToast(msg){
     var t=document.getElementById('toast');
     t.textContent=msg; t.classList.add('show');
@@ -791,18 +874,17 @@
     var tnOk=tn && tn.value.trim()!=='';
     var fM=document.querySelector('[data-key="fillM"]'); var fD=document.querySelector('[data-key="fillD"]');
     var dateOk=fM && fM.value!=='' && fD && fD.value!=='';
-    var rows=courseBody.children.length;
     var feeOk=true, feeRows=[];
-    for(var i=0;i<rows;i++){
-      var f1=document.querySelector('[data-key="c'+i+'_fee1"]');
-      var f2=document.querySelector('[data-key="c'+i+'_fee2"]');
+    Array.prototype.forEach.call(document.querySelectorAll('[data-key$="_fee1"]'),function(f1){
+      var g=parseInt((f1.getAttribute('data-key')||'').match(/^c([0-9]+)_/)[1],10);
+      var f2=document.querySelector('[data-key="c'+g+'_fee2"]');
       var hasData=false;
       ['m','d','w','period','class','subj','amt'].forEach(function(sfx){
-        var el=document.querySelector('[data-key="c'+i+'_'+sfx+'"]');
+        var el=document.querySelector('[data-key="c'+g+'_'+sfx+'"]');
         if(el && el.value.trim()!=='') hasData=true;
       });
-      if(f1&&f2&&hasData&&f1.checked===f2.checked){ feeOk=false; feeRows.push(i+1); }
-    }
+      if(f2&&hasData&&f1.checked===f2.checked){ feeOk=false; feeRows.push('第'+(Math.floor(g/7)+1)+'天第'+(g%7+1)+'列'); }
+    });
     function periodOk(){
       function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
       var sY=v('sY'),sM=v('sM'),sD=v('sD'),sH=v('sH')||'0',sMin=v('sMin')||'0';
@@ -875,19 +957,9 @@
     var sheets=[];
     dayList.forEach(function(day,di){
       var clone=src.cloneNode(true);
-      function rowMatch(k){
-        var m=k.match(/^c([0-9]+)_/); if(!m) return null;
-        var idx=m[1];
-        var rm=sv('c'+idx+'_m'), rd=sv('c'+idx+'_d');
-        var hasData=['m','d','w','period','class','subj','amt'].some(function(f2){ return sv('c'+idx+'_'+f2)!==''; });
-        if(!hasData) return null;
-        if(rm===''||rd==='') return (di===0);
-        return (parseInt(rm,10)===(day.start.getMonth()+1) && parseInt(rd,10)===day.start.getDate());
-      }
       clone.querySelectorAll('[data-key]').forEach(function(el){
         var k=el.dataset.key;
         var snap=snapshot[k];
-        if(isCourseRow(k) && rowMatch(k)===false){ snap={c:false,v:''}; }
         if(!snap){ el.parentNode.removeChild(el); return; }
         if(el.type==='checkbox'){
           var mark=document.createElement('span');
@@ -908,6 +980,7 @@
         }
         el.parentNode.replaceChild(span,el);
       });
+      clone.querySelectorAll('.day-sec').forEach(function(sec,idx){ if(idx!==di && sec.parentNode) sec.parentNode.removeChild(sec); });
       var prows=clone.querySelectorAll('.prow');
       if(prows.length>=2){
         prows[0].textContent='自 '+fmtD(day.start)+' 起';
@@ -1058,7 +1131,7 @@
     if(v.period===false) msgs.push('請假期間「結束時間」不能早於「開始時間」');
     if(!v.leave) msgs.push('請在「假別」至少勾選一項');
     if(!v.opt) msgs.push('請在「課務／級務處理方式」至少勾選一項');
-    if(!v.fee) msgs.push('課務明細第 '+v.feeRows.join('、')+' 列的「鐘點費」請擇一勾選');
+    if(!v.fee) msgs.push('課務明細 '+v.feeRows.join('、')+' 的「鐘點費」請擇一勾選');
     if(msgs.length){ showToast(msgs.join('，')); return; }
     if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){ showToast('PDF 功能載入中，請稍候再試'); return; }
     showToast('正在產生 PDF…');
@@ -1126,7 +1199,7 @@
 
   document.getElementById('clearBtn').addEventListener('click',function(){
     if(!window.confirm('確定要清除所有已填寫的內容嗎？')) return;
-    setRows(7);
+    buildSections(true);
     document.querySelectorAll('[data-key]').forEach(function(el){
       if(el.type==='checkbox'){ el.checked=false; }
       else if(el.tagName==='SELECT'){ el.selectedIndex=0; }
@@ -1159,7 +1232,7 @@
     }
   });
 
-  setRows(7);
+  buildSections(true);
   load();
   save();
 })();
