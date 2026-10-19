@@ -475,7 +475,7 @@
 
 <div class="steps">
   <span class="step"><span class="n">1</span>填寫請假資訊</span><span class="arrow">→</span>
-  <span class="step"><span class="n">2</span>填妥代課資料（共 7 列）</span><span class="arrow">→</span>
+  <span class="step"><span class="n">2</span>填妥代課資料（僅列出有課節次）</span><span class="arrow">→</span>
   <span class="step"><span class="n">3</span>按「列印表單」</span><span class="arrow">→</span>
   <span class="step"><span class="n">4</span>手寫簽名後送教學組、教務主任核章</span>
   
@@ -666,16 +666,22 @@
   ['sMin','eMin'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MINS,'分');});
 
   /* ---- 課務明細列 ---- */
-  function rowHtml(G,mv,dv){
+  var DAY_ROW_START=[]; var DAY_ROW_CNT=[]; var TOTAL_ROWS=0; var LAST_TEACHER_KEY='';
+  function dayOfG(g){
+    for(var di=0;di<DAY_ROW_CNT.length;di++){ if(g>=DAY_ROW_START[di]&&g<DAY_ROW_START[di]+DAY_ROW_CNT[di]) return di; }
+    return -1;
+  }
+  function pv(x){ return (x==null)?'':String(x).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+  function rowHtml(G,mv,dv,pf){
     var ro=(mv!=='')?' readonly':'';
     return '<tr>'
       +'<td class="ckcell"><label class="ck"><input data-key="c'+G+'_inc" type="checkbox" checked><span class="box"></span></label></td>'
       +'<td><input data-key="c'+G+'_m" type="text" value="'+mv+'"'+ro+'></td>'
       +'<td><input data-key="c'+G+'_d" type="text" value="'+dv+'"'+ro+'></td>'
-      +'<td><input data-key="c'+G+'_w" type="text"></td>'
-      +'<td><input data-key="c'+G+'_period" type="text"></td>'
-      +'<td><input data-key="c'+G+'_class" type="text"></td>'
-      +'<td><input data-key="c'+G+'_subj" type="text"></td>'
+      +'<td><input data-key="c'+G+'_w" type="text" value="'+pv(pf&&pf.w)+'"></td>'
+      +'<td><input data-key="c'+G+'_period" type="text" value="'+pv(pf&&pf.period)+'"></td>'
+      +'<td><input data-key="c'+G+'_class" type="text" value="'+pv(pf&&pf.cls)+'"></td>'
+      +'<td><input data-key="c'+G+'_subj" type="text" value="'+pv(pf&&pf.subj)+'"></td>'
       +'<td class="ckcell"><label class="ck"><input data-key="c'+G+'_fee1" type="checkbox"><span class="box"></span></label></td>'
       +'<td class="ckcell"><label class="ck"><input data-key="c'+G+'_fee2" type="checkbox"><span class="box"></span></label></td>'
       +'<td><input data-key="c'+G+'_amt" type="text"></td>'
@@ -691,54 +697,54 @@
     daySections.innerHTML='';
     DAY_DATES=days.map(function(d){ return d?{y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate(),dow:d.getDay()}:null; });
     var wk=['日','一','二','三','四','五','六'];
+    var tmatch=null;
+    var tnEl=document.querySelector('[data-key="teacherName"]');
+    var tval=tnEl?(tnEl.value||'').trim().replace(/老師$/,''):'';
+    if(tval){ TLIST.forEach(function(k){ if(k.replace(/老師$/,'')===tval) tmatch=TIMETABLE[k]; }); }
+    var tChanged=(tval!==LAST_TEACHER_KEY); LAST_TEACHER_KEY=tval;
+    DAY_ROW_START=[]; DAY_ROW_CNT=[]; var G=0;
     days.forEach(function(d,di){
       var headTxt=d?('第 '+(di+1)+' 天：'+(d.getMonth()+1)+' 月 '+d.getDate()+' 日（週'+wk[d.getDay()]+'）'):('第 '+(di+1)+' 天');
+      var dayTab=(tmatch&&d)?(tmatch[wk[d.getDay()]]||{}):null;
+      var courses=[];
+      if(dayTab){
+        for(var p=0;p<=7;p++){
+          var cell=dayTab[String(p)];
+          if(cell){ var parts=String(cell).split(' '); courses.push({p:p,w:'週'+wk[d.getDay()],period:(p===0?'晨間':'第'+p+'節'),cls:parts[1]||'',subj:parts[0]||''}); }
+        }
+      }
       var rows='';
-      for(var r=0;r<7;r++){
-        var G=di*7+r;
-        rows+=rowHtml(G, d?String(d.getMonth()+1):'', d?String(d.getDate()):'');
+      DAY_ROW_START.push(G);
+      if(dayTab && courses.length===0){
+        DAY_ROW_CNT.push(0);
+        headTxt+='（本日依課表無課，免填）';
+      } else if(dayTab){
+        DAY_ROW_CNT.push(courses.length);
+        courses.forEach(function(c){ rows+=rowHtml(G, String(d.getMonth()+1), String(d.getDate()), c); G++; });
+      } else {
+        DAY_ROW_CNT.push(7);
+        for(var r=0;r<7;r++){ rows+=rowHtml(G, d?String(d.getMonth()+1):'', d?String(d.getDate()):'', null); G++; }
       }
       var sec=document.createElement('div');
       sec.className='day-sec';
       sec.innerHTML='<div class="day-head">'+headTxt+'</div>'
-        +'<div class="t3-wrap"><table class="t3"><colgroup>'
+        +(rows?('<div class="t3-wrap"><table class="t3"><colgroup>'
         +'<col style="width:4%"><col style="width:5%"><col style="width:5%"><col style="width:6%"><col style="width:10%"><col style="width:9%"><col style="width:13%"><col style="width:9%"><col style="width:8%"><col style="width:11%"><col style="width:20%">'
         +'</colgroup><thead><tr>'
         +'<th>印</th><th>月</th><th>日</th><th>星期</th><th>節次或全日</th><th>班級</th><th>科目<br>（整日請寫包班）</th><th>鐘點費<br>由總務處轉</th><th>鐘點費<br>自理</th><th>鐘點費或日薪金額</th><th>代理（課）<br>教師簽名</th>'
-        +'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+        +'</tr></thead><tbody>'+rows+'</tbody></table></div>'):'');
       daySections.appendChild(sec);
     });
+    TOTAL_ROWS=G;
     document.querySelectorAll('[data-key]').forEach(function(el){
       var k=el.dataset.key;
       if(/^c[0-9]+_/.test(k)) return;
       if(k in saved){ if(el.type==='checkbox'){ el.checked=!!saved[k]; } else { el.value=saved[k]==null?'':saved[k]; } }
     });
-    redistribute(saved);
-    try{applyTimetable();}catch(_){}
+    if(!tChanged) redistribute(saved);
     save();
   }
-    function applyTimetable(){
-    var tn=document.querySelector('[data-key="teacherName"]'); if(!tn) return;
-    var val=(tn.value||'').trim().replace(/老師$/,''); if(!val) return;
-    var t=null;
-    TLIST.forEach(function(k){ if(k.replace(/老師$/,'')===val) t=TIMETABLE[k]; });
-    if(!t) return;
-    var wk=['日','一','二','三','四','五','六'];
-    DAY_DATES.forEach(function(dd,di){
-      if(!dd) return;
-      var dc=wk[dd.dow]; var dayTab=t[dc]||{};
-      for(var r=0;r<7;r++){
-        var G=di*7+r;
-        var cell=dayTab[String(r+1)]||dayTab[String(r)];
-        if(!cell) continue;
-        var parts=cell.split(' '); var subj=parts[0]||''; var cls=parts[1]||'';
-        function gv(sf){ var e2=document.querySelector('[data-key="c'+G+'_'+sf+'"]'); return e2?String(e2.value||'').trim():''; }
-        if(gv('period')+gv('class')+gv('subj')) continue;
-        function st(sf,v){ var e2=document.querySelector('[data-key="c'+G+'_'+sf+'"]'); if(e2) e2.value=v; }
-        st('w','週'+dc); st('period','第'+(r+1)+'節'); st('class',cls); st('subj',subj);
-      }
-    });
-  }
+  function applyTimetable(){ buildSections(true); }
   function redistribute(data){
     if(!data) return;
     var recs=[];
@@ -749,7 +755,6 @@
       if(rec.m||rec.d||rec.w||rec.period||rec.cls||rec.subj||rec.amt||rec.f1||rec.f2) recs.push(rec);
     }
     if(!recs.length) return;
-    var total=DAY_DATES.length*7;
     var used={};
     function fill(G,rec){
       var b='c'+G+'_';
@@ -760,18 +765,26 @@
       if(e2) e2.checked=rec.f2;
       used[G]=true;
     }
+    function fillDay(di,rec){
+      var s=DAY_ROW_START[di]||0, n=DAY_ROW_CNT[di]||0, gs=[];
+      for(var i=0;i<n;i++) if(!used[s+i]) gs.push(s+i);
+      if(!gs.length) return false;
+      var pick=gs[0];
+      if(rec.period){
+        for(var j=0;j<gs.length;j++){
+          var pe=document.querySelector('[data-key="c'+gs[j]+'_period"]');
+          if(pe && pe.value.trim()===rec.period){ pick=gs[j]; break; }
+        }
+      }
+      fill(pick,rec); return true;
+    }
     recs.forEach(function(rec){
       if(rec.m===''||rec.d==='') return;
       var mi=parseInt(rec.m,10), di2=parseInt(rec.d,10);
       for(var di=0; di<DAY_DATES.length; di++){
         var dd2=DAY_DATES[di]; if(!dd2) continue;
-        if(dd2.m===mi && dd2.d===di2){
-          for(var r2=0;r2<7;r2++){ var G=di*7+r2; if(!used[G]){ fill(G,rec); return; } }
-        }
+        if(dd2.m===mi && dd2.d===di2){ fillDay(di,rec); return; }
       }
-    });
-    recs.forEach(function(rec){
-      for(var G=0; G<total; G++){ if(!used[G]){ fill(G,rec); return; } }
     });
   }
 
@@ -912,7 +925,7 @@
         var el=document.querySelector('[data-key="c'+g+'_'+sfx+'"]');
         if(el && el.value.trim()!=='') hasData=true;
       });
-      if(f2&&hasData&&f1.checked===f2.checked){ feeOk=false; feeRows.push('第'+(Math.floor(g/7)+1)+'天第'+(g%7+1)+'列'); }
+      if(f2&&hasData&&f1.checked===f2.checked){ feeOk=false; var ddi=dayOfG(g); feeRows.push('第'+(ddi+1)+'天第'+(g-(DAY_ROW_START[ddi]||0)+1)+'列'); }
     });
     function periodOk(){
       function v(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value.trim():''; }
