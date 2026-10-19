@@ -666,7 +666,7 @@
   ['sMin','eMin'].forEach(function(k){fillSelect(document.querySelector('[data-key="'+k+'"]'),MINS,'分');});
 
   /* ---- 課務明細列 ---- */
-  var DAY_ROW_START=[]; var DAY_ROW_CNT=[]; var TOTAL_ROWS=0; var LAST_TEACHER_KEY='';
+  var DAY_ROW_START=[]; var DAY_ROW_CNT=[]; var TOTAL_ROWS=0; var BOOTED=false;
   function dayOfG(g){
     for(var di=0;di<DAY_ROW_CNT.length;di++){ if(g>=DAY_ROW_START[di]&&g<DAY_ROW_START[di]+DAY_ROW_CNT[di]) return di; }
     return -1;
@@ -688,7 +688,7 @@
       +'<td class="sig-cell"></td>'
       +'</tr>';
   }
-  function buildSections(force){
+  function buildSections(force, freshTeacher){
     var days=listLeaveDays();
     var key=days.map(function(d){return d?(d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate()):'x';}).join('|');
     if(!force && key===LAST_DAYS_KEY) return;
@@ -701,7 +701,6 @@
     var tnEl=document.querySelector('[data-key="teacherName"]');
     var tval=tnEl?(tnEl.value||'').trim().replace(/老師$/,''):'';
     if(tval){ TLIST.forEach(function(k){ if(k.replace(/老師$/,'')===tval) tmatch=TIMETABLE[k]; }); }
-    var tChanged=(tval!==LAST_TEACHER_KEY); LAST_TEACHER_KEY=tval;
     DAY_ROW_START=[]; DAY_ROW_CNT=[]; var G=0;
     days.forEach(function(d,di){
       var headTxt=d?('第 '+(di+1)+' 天：'+(d.getMonth()+1)+' 月 '+d.getDate()+' 日（週'+wk[d.getDay()]+'）'):('第 '+(di+1)+' 天');
@@ -741,10 +740,16 @@
       if(/^c[0-9]+_/.test(k)) return;
       if(k in saved){ if(el.type==='checkbox'){ el.checked=!!saved[k]; } else { el.value=saved[k]==null?'':saved[k]; } }
     });
-    if(!tChanged) redistribute(saved);
-    save();
+    if(freshTeacher!==true) redistribute(saved);
+    if(BOOTED) save();
   }
-  function applyTimetable(){ buildSections(true); }
+  function applyTimetable(){
+    var tn=document.querySelector('[data-key="teacherName"]');
+    var val=tn?(tn.value||'').trim().replace(/老師$/,''):'';
+    var has=false;
+    for(var i=0;i<TLIST.length;i++){ if(TLIST[i].replace(/老師$/,'')===val){ has=true; break; } }
+    buildSections(true, has);
+  }
   function redistribute(data){
     if(!data) return;
     var recs=[];
@@ -827,7 +832,6 @@
     });
     redistribute(data);
     try{ computeTotal(); periodErrorCheck(); }catch(_){}
-    save();
     checkStoredPrivacy();
   }
 
@@ -1283,7 +1287,8 @@
 
   buildSections(true);
   load();
-  save();
+  BOOTED=true;
+  buildSections(true);
 })();
 </script>
 
