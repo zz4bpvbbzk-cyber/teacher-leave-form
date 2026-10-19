@@ -251,12 +251,12 @@
 
   /* ---------- 列印 ---------- */
   @media print{
-    @page{size:A4 portrait;margin:12mm}
+    @page{size:A4 portrait;margin:5mm 3mm}
     html,body{background:#fff}
     body{color:#000}
     .toolbar,.steps,.row-actions,.auto-tag,.screen-only{display:none !important}
     .sheet-wrap{padding:0;display:block}
-    .form-sheet{width:auto;min-height:0;box-shadow:none;padding:0;font-size:11.5px;line-height:1.4}
+    .form-sheet{width:auto;min-height:0;box-shadow:none;padding:0;font-size:12.5px;line-height:1.45}
     input[type=text],input[type=number],textarea,select{
       background:transparent !important;border:none !important;border-radius:0;padding:0;
       -webkit-appearance:none;appearance:none;
@@ -264,13 +264,13 @@
     select{padding:0 1px !important}
     .t3 th{background:#fff !important}
     .save-hint{display:none}
-    .stamp-space{height:60px}
+    .stamp-space{height:52px}
     .t1-sign{min-height:0}
     .t1-sign .sign-space{min-height:18px}
     .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
     .t1 td{padding:4px 6px}
     .t1-sign .sign-space{height:20px}
-    .type-grid{font-size:10.5px;gap:1px 6px}
+    .type-grid{font-size:12px;gap:1px 6px}
     .t1-reason textarea{height:50px}
     .t1p-main .prow{white-space:normal;line-height:1.75}
     .t2 td{padding:4px 7px}
@@ -280,7 +280,7 @@
     .duty-agent input[type="text"]{position:static !important;opacity:1 !important;background:transparent !important;border:1px dashed #000 !important;width:5em;height:auto;padding:0}
     .sec-title{margin:6px 0 2px;font-size:15px}
     .t3 th,.t3 td{padding:1px 2px}
-    .t3 th{font-size:11px}
+    .t3 th{font-size:12px}
     .rules{padding:3px 10px 5px;margin-top:6px}
     .rules li{margin-bottom:2px}
     .rules .sub{margin:1px 0}
@@ -297,22 +297,22 @@
   .pdf-capture .t1-sign .cell-title input{background:transparent !important;border:none !important;border-bottom:1px solid #000 !important;width:7em;padding:0}
   .pdf-capture .duty-agent input[type="text"]{background:transparent !important;border:1px dashed #000 !important;width:5em;padding:0}
   .pdf-capture .t3 th{background:#fff !important}
-  .pdf-capture .stamp-space{height:55px}
+  .pdf-capture .stamp-space{height:46px}
   .pdf-capture .t1 td{padding:4px 6px}
   .pdf-capture .t2 td{padding:4px 7px}
   .pdf-capture .t2-right .opt{margin-bottom:2px}
   .pdf-capture .rules-ol li{margin-bottom:2px}
   .pdf-capture .duty-agent{margin-top:4px;line-height:1.8}
-  .pdf-capture .sec-title{margin:6px 0 2px;font-size:15px}
+  .pdf-capture .sec-title{margin:5px 0 2px;font-size:16px}
   .pdf-capture .t3 th,.pdf-capture .t3 td{padding:1px 2px}
-  .pdf-capture .t3 th{font-size:11px}
+  .pdf-capture .t3 th{font-size:12px}
   .pdf-capture .rules{padding:3px 10px 5px;margin-top:6px}
   .pdf-capture .rules li{margin-bottom:2px}
   .pdf-capture .rules .sub{margin:1px 0}
   .pdf-capture .stamp-cell{padding:5px 12px}
   .pdf-capture .footer-note{margin-top:2px}
   .pdf-capture .form-top{margin-bottom:3px}
-  .pdf-capture .form-top h1{font-size:17px}
+  .pdf-capture .form-top h1{font-size:18px}
   .pdf-capture .top-meta{margin-top:2px}
   .pdf-capture .type-grid{font-size:10.5px;gap:1px 6px}
   .pdf-capture .t1-sign{min-height:0}
@@ -387,7 +387,7 @@
 
   /* PDF 輸出副本（離屏渲染用，文字化欄位） */
   #pdfDocWrap{position:fixed;left:0;top:0;width:212mm;opacity:0.001;pointer-events:none;background:#fff}
-  #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:10mm;background:#fff;box-shadow:none;font-size:12px;line-height:1.5}
+  #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:4mm;background:#fff;box-shadow:none;font-size:13px;line-height:1.45}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
   #pdfDocWrap .pdf-check{display:inline-block;width:12px;height:12px;border:1px solid #000;text-align:center;line-height:12px !important;font-size:11px !important;font-weight:700;background:#fff;vertical-align:-2px;padding:0;margin:0;box-sizing:border-box}
@@ -396,9 +396,9 @@
   #pdfDocWrap .t3 .pdf-val{min-width:30px}
   #pdfDocWrap .t3 .pdf-val-empty{min-width:26px}
   #pdfDocWrap .duty-agent .pdf-val{min-width:5em}
-  #pdfDocWrap .t1p-main{line-height:2}
+  #pdfDocWrap .t1p-main{line-height:1.9}
   #pdfDocWrap .t1p-main .prow{white-space:nowrap}
-  #pdfDocWrap .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;font-size:10.5px;align-items:start}
+  #pdfDocWrap .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;font-size:12px;align-items:start}
   #pdfDocWrap .type-grid .ck{display:flex;align-items:flex-start;gap:4px;position:static;padding:0;margin:0;line-height:1.5}
   #pdfDocWrap .type-grid .ck .txt{display:block;flex:1;padding:0}
   #pdfDocWrap .pdf-val{vertical-align:middle}
@@ -412,7 +412,7 @@
   #pdfDocWrap .t1 td{padding:4px 6px}
   #pdfDocWrap .sign-space{height:18px}
 
-  #pdfDocWrap .sign-space{height:40px}
+  #pdfDocWrap .sign-space{height:34px}
   #pdfDocWrap .t3 td{height:auto;padding:3px 4px}
   #pdfDocWrap .t3 td .pdf-val-empty{min-width:1em}
 </style>
@@ -1018,7 +1018,7 @@
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
       var imgW=canvas.width, imgH=canvas.height;
       // 等比縮放至 A4 可用範圍（四周留 10mm 邊）
-      var availW=210-10, availH=297-16;
+      var availW=210-6, availH=297-10;
       var k=Math.min(availW/imgW, availH/imgH);
       var w=imgW*k, h=imgH*k;
       var x=(210-w)/2, y=(297-h)/2;
