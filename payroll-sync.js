@@ -19,7 +19,7 @@
 
   /* ================= ① 設定區（唯一要改的地方） ================= */
   var CONFIG = {
-    URL: 'https://script.google.com/macros/s/XXXXXXXXXXXX/exec',
+    URL: 'https://script.google.com/macros/s/https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnSwsG65O_28dvRP0LNf3P7eHKyr_-f6cgMN1VJvxvK74YUWjNfwmZmptMbLlBwu5KHRfBMU2DY8Y5exZAULkkc-qgpyyAP7prEbxQM7de4qOZQ8ziD2OpDmFaCpV-hkA_OvVAkSRPb2zDWkaQBBj4kvnw-7BDXLL0NVXlVSkTXmG8QOJeh3AvS15IOYMfIo1WetLMuHoQ-gRIs_uZy1coaUfVGzon5RguWMHD-4_iCJA3yEM5kAvH3XHAJSLpDQRYaNdPO5fKahYKK8i-Xg4g9xFp1jlUTo18PeDVvY_KFD8kFkRC0&lib=MlMdIvAtpp944od_tTd1zEqbkSP71doWY/exec',
 ' // ← 在引號內貼上你的 Apps Script「網頁應用程式」網址（/exec 結尾）
   };
 
