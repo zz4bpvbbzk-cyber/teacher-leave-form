@@ -1192,10 +1192,7 @@
             }).catch(function(){ androidFallback(); });
             return;
           }
-          // 舊手機不支援檔案分享 → 降級為 jsPDF 原生下載 + 引導
-          pendingDoc.save(filename); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){}
-          if(/iPhone|iPad|iPod/.test(navigator.userAgent)){ showIosGuide(); }
-          else { showToast('PDF 已下載，請至右上角「下載」圖示查看'); }
+          androidFallback();
         }catch(e){
           try{ pendingDoc.save(filename); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){} }catch(_){}
           showToast('已產生 PDF，請至瀏覽器「下載」歷史查看');
