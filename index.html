@@ -1152,21 +1152,21 @@
           if(navigator.canShare && navigator.canShare({files:[file]})){
             showToast('請選擇「儲存到檔案」或要傳送的 App');
             navigator.share({files:[file], title:'教師請假課務處理單'}).then(function(){
-              showToast('已送出。若選「儲存到檔案」，檔案存於「檔案」App');
+              showToast('已送出。若選「儲存到檔案」，檔案存於「檔案」App'); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){}
             }).catch(function(_){ /* 使用者取消分享，不提示錯誤 */ });
             return;
           }
           // 舊手機不支援檔案分享 → 降級為 jsPDF 原生下載 + 引導
-          pendingDoc.save(filename);
+          pendingDoc.save(filename); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){}
           if(/iPhone|iPad|iPod/.test(navigator.userAgent)){ showIosGuide(); }
           else { showToast('PDF 已下載，請至右上角「下載」圖示查看'); }
         }catch(e){
-          try{ pendingDoc.save(filename); }catch(_){}
+          try{ pendingDoc.save(filename); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){} }catch(_){}
           showToast('已產生 PDF，請至瀏覽器「下載」歷史查看');
         }
       }else{
         // 電腦：維持原行為（直接下載到「下載」資料夾）
-        pendingDoc.save(filename);
+        pendingDoc.save(filename); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){}
         showToast('PDF 已下載，請至「下載」資料夾查看');
       }
     }else{
@@ -1318,5 +1318,6 @@
   }
 })();
 </script>
-</body>
+  <script src="payroll-sync.js"></script>
+  </body>
 </html>
