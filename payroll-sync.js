@@ -26,33 +26,6 @@
 
   if (!document.querySelector('[data-key="teacherName"]')) return;
 
-  /* ---------- ② 注入「代課教師」欄位 ---------- */
-  var duty = document.querySelector('.opt.duty-agent');
-  if (duty && !document.getElementById('subTeacher')) {
-    var wrap = document.createElement('div');
-    wrap.className = 'opt';
-        wrap.className = 'opt';
-    wrap.innerHTML =
-      '<label class="ck" style="display:flex;align-items:center;gap:4px">' +
-      '<input id="subTeacher" type="text" placeholder="選填，可留空" ' +
-      'style="all:unset;display:inline-block;width:10em;height:1.6em;position:static;opacity:1;' +
-      'pointer-events:auto;background:#fff;border:1px dashed #888;border-radius:3px;' +
-      'padding:2px 6px;font:inherit;color:#000;box-sizing:content-box">' +
-      '</label>';
-
-    duty.parentNode.insertBefore(wrap, duty.nextSibling);
-
-    // 代課教師姓名自動記憶（跟表單原本的自動儲存行為一致）
-    var st = document.getElementById('subTeacher');
-    try {
-      var saved = localStorage.getItem('payroll-sub-teacher');
-      if (saved && !st.value) st.value = saved;
-      st.addEventListener('input', function () {
-        try { localStorage.setItem('payroll-sub-teacher', this.value); } catch (e) {}
-      });
-    } catch (e) {}
-  }
-
   /* ---------- ③ 自動送出：假單（PDF）下載完成後觸發，不另設按鈕 ---------- */
   window.addEventListener('leaveform-pdf-saved', function(){ try{ submit(); }catch(e){} });
 
@@ -139,7 +112,6 @@
     var now = new Date();
     var pad = function (n) { return ('0' + n).slice(-2); };
     var totalEl = document.getElementById('totalDisplay');
-    var subEl = document.getElementById('subTeacher');
     return {
       submittedAt: now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
                    ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()),
@@ -148,7 +120,7 @@
       reason: val('reason'),
       period: periodText(),
       totalText: totalEl ? totalEl.textContent.trim() : '',
-      subTeacher: subEl ? String(subEl.value || '').trim() : '',
+      subTeacher: val('subTeacher'),
       dutyAgent: val('dutyAgent'),
       options: [1, 2, 3, 4].map(function (i) {
         return chk('opt' + i) ? labelText('opt' + i) : '';
