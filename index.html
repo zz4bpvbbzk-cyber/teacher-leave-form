@@ -408,6 +408,7 @@
     .t3{min-width:640px}
     .duty-agent{white-space:normal}
     .duty-agent .sig-line{margin-left:18px}
+    .duty-agent input[type="text"]{width:7em}
     .row-actions{flex-wrap:wrap}
     .pdf-modal-box{margin:10px;padding:14px}
   }
@@ -1099,6 +1100,28 @@
   document.getElementById('zoomIn').addEventListener('click',function(){ zoomLv=Math.min(zoomLv+0.25,3); applyZoom(); });
   document.getElementById('zoomOut').addEventListener('click',function(){ zoomLv=Math.max(zoomLv-0.25,0.25); applyZoom(); });
   document.getElementById('zoomFit').addEventListener('click',function(){ fitZoom(); });
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function showAndroidSave(url, filename){
+    var ex=document.getElementById('androidSave'); if(ex) ex.parentNode.removeChild(ex);
+    var box=document.createElement('div');
+    box.id='androidSave';
+    box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px;font-family:-apple-system,Helvetica,sans-serif;';
+    var ef=esc(filename);
+    box.innerHTML='<div style="background:#fff;border-radius:14px;max-width:440px;width:100%;padding:22px 22px 18px;line-height:1.55;color:#222;box-shadow:0 20px 50px rgba(0,0,0,.35)">'+
+      '<h3 style="margin:0 0 6px;font-size:18px;color:#1d4d8f">⬇ 下載假單</h3>'+
+      '<div style="font-size:13px;color:#666;margin-bottom:14px">按下方按鈕即可下載 PDF（'+ef+'）</div>'+
+      (url?'<a id="androidSaveBtn" href="'+url+'" download="'+ef+'" style="display:block;text-align:center;background:#1d4d8f;color:#fff;border-radius:8px;padding:12px;font-weight:700;font-size:16px;text-decoration:none;margin-bottom:12px">⬇ 點此下載假單</a>':'')+
+      '<div style="background:#f6f8fa;border-radius:8px;padding:10px 12px;font-size:13px;color:#444">'+
+        '若點擊沒有反應，表示目前使用的瀏覽器（如 LINE 內建瀏覽器）不允許下載檔案——請複製本頁網址，改用 <b>Chrome</b> 開啟後再按「下載假單」即可。'+
+      '</div>'+
+      '<div style="text-align:right;margin-top:12px"><span id="androidSaveClose" style="display:inline-block;background:#eef1f4;color:#333;border-radius:8px;padding:9px 20px;font-weight:600;font-size:14px;cursor:pointer">關閉</span></div>'+
+    '</div>';
+    document.body.appendChild(box);
+    var b=document.getElementById('androidSaveBtn');
+    if(b){ b.addEventListener('click',function(){ try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){ } showToast('已開始下載，請至通知列或「下載」查看'); }); }
+    document.getElementById('androidSaveClose').onclick=function(){ try{box.parentNode.removeChild(box);}catch(_){ } };
+    box.onclick=function(e){ if(e.target===box){ try{box.parentNode.removeChild(box);}catch(_){ } } };
+  }
   function showIosGuide(){
     // 移除舊的引導 (若存在)
     var ex=document.getElementById('iosGuide'); if(ex) ex.parentNode.removeChild(ex);
