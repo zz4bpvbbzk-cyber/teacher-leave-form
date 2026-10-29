@@ -1177,6 +1177,8 @@
       var isMobile=/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
       document.getElementById('pdfModal').style.display='none';
       if(isMobile){
+        var fbBlob=null;
+        function androidFallback(){ try{ if(!fbBlob) fbBlob=URL.createObjectURL(pendingDoc.output('blob')); }catch(_){ } showAndroidSave(fbBlob, filename); }
         // 手機：呼叫「系統分享選單」(Web Share API) —— 老師可直接「儲存到檔案 / 傳 LINE / AirDrop / 列印」，
         //        不需去任何資料夾找檔案，選項由系統面板一次給齊
         try{
@@ -1187,7 +1189,7 @@
             showToast('請選擇「儲存到檔案」或要傳送的 App');
             navigator.share({files:[file], title:'教師請假課務處理單'}).then(function(){
               showToast('已送出。若選「儲存到檔案」，檔案存於「檔案」App'); try{window.dispatchEvent(new Event('leaveform-pdf-saved'));}catch(_){}
-            }).catch(function(_){ /* 使用者取消分享，不提示錯誤 */ });
+            }).catch(function(){ androidFallback(); });
             return;
           }
           // 舊手機不支援檔案分享 → 降級為 jsPDF 原生下載 + 引導
