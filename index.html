@@ -446,8 +446,8 @@
 <div class="toast" id="toast"></div>
 <div class="pdf-modal" id="pdfModal" style="display:none">
   <div class="pdf-modal-box">
-    <h3>PDF 預覽</h3>
-    <p id="pdfProg">請確認表單內容正確無誤後，再下載。</p>
+    <h3>假單預覽</h3>
+    <p id="pdfProg">請確認表單內容正確無誤後，再下載假單。</p>
     <div class="pdf-preview-wrap"><div id="pdfImg"></div></div>
     <div class="pdf-zoom"><button class="btn ghost" id="zoomOut">－ 縮小</button>
     <span id="zoomPct">100%</span>
@@ -470,7 +470,7 @@
   <span class="save-hint" id="saveHint"><span class="dot"></span>自動儲存<span id="saveTime"></span></span>
   <button class="btn ghost" id="clearBtn">清除重填</button>
     
-  <button class="btn ink" id="pdfBtn">⬇ 下載 PDF</button>
+  <button class="btn ink" id="pdfBtn">⬇ 下載假單</button>
 </header>
 
 <div class="steps">
@@ -565,7 +565,7 @@
           <div class="opt"><label class="ck"><input data-key="opt2" type="checkbox"><span class="box"></span><span class="txt">部分課程以代課教師代理</span></label></div>
           <div class="opt"><label class="ck"><input data-key="opt3" type="checkbox"><span class="box"></span><span class="txt">部分以調課處理，另填寫調課單</span></label></div>
           <div class="opt duty-agent">
-            <label class="ck"><input data-key="opt4" type="checkbox"><span class="box"></span><span class="txt"><strong>晨光、午餐、午休及下課級務代理人：</strong><input data-key="dutyAgent" type="text"></span></label>
+            <label class="ck"><input data-key="opt4" type="checkbox"><span class="box"></span><span class="txt"><strong>晨光、午餐、午休及下課級務代理人：</strong><input data-key="dutyAgent" type="text" placeholder="選填，可留空"></span></label>
             <div class="sig-line"><span class="sigline"></span>請代理人親簽</div>
           </div>
         </td>
@@ -573,7 +573,7 @@
     </table>
 
     <!-- 第三區：課務明細表 -->
-    <div class="sec-title">需代課之課務明細（依請假日自動分區，每天 7 列）</div>
+    <div class="sec-title">需代課之課務明細（依請假日與課表自動生成，僅列出有課節次）</div>
     <div id="daySections"></div>
 
     <!-- 第四區：說明 -->
@@ -638,6 +638,8 @@
     return out.length?out:[null];
   }
   var PERIOD_KEYS=['sY','sM','sD','sH','sMin','eY','eM','eD','eH','eMin'];
+  var END_TOUCHED=false;
+  function syncEndFromStart(){ ['Y','M','D','H','Min'].forEach(function(s){ var a=document.querySelector('[data-key="s'+s+'"]'), b=document.querySelector('[data-key="e'+s+'"]'); if(a&&b&&a.value!==''){ b.value=a.value; } }); }
 
   /* ---- 下拉式選單選項 ---- */
   function fillSelect(sel, opts, ph){
@@ -1078,7 +1080,7 @@
     });
     if(list.length>1) html='<div style="text-align:center;font-weight:700;margin-bottom:8px">共 '+list.length+' 頁（1 日 1 張）</div>'+html;
     wrap.innerHTML=html;
-    document.getElementById('pdfProg').textContent='已產生 PDF 預覽'+(list.length>1?('（共 '+list.length+' 頁，1 日 1 張）'):'')+'，請確認內容正確無誤後再下載。';
+    document.getElementById('pdfProg').textContent='已產生假單預覽'+(list.length>1?('（共 '+list.length+' 頁，1 日 1 張）'):'')+'，請確認內容正確無誤後再下載假單。';
     zoomLv=1;
     setTimeout(applyZoom,0);
     document.getElementById('pdfModal').style.display='flex';
@@ -1277,7 +1279,12 @@
       }
     }
     save();
-    if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){ computeTotal(); periodErrorCheck(); buildSections(false); }
+    if(PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){
+      var pk=e.target.dataset.key;
+      if(pk.charAt(0)==='e'){ END_TOUCHED=true; }
+      else if(pk.charAt(0)==='s'&&!END_TOUCHED){ syncEndFromStart(); }
+      computeTotal(); periodErrorCheck(); buildSections(false);
+    }
   });
   document.addEventListener('input',function(e){
     if(e.target.matches('[data-key]')&&PERIOD_KEYS.indexOf(e.target.dataset.key)!==-1){
@@ -1287,6 +1294,7 @@
 
   buildSections(true);
   load();
+  try{ (function(){ var g=function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value:''; }; END_TOUCHED=['Y','M','D','H','Min'].some(function(s){ return g('e'+s)!==g('s'+s); }); })(); }catch(_){}
   BOOTED=true;
   buildSections(true);
 })();
@@ -1309,8 +1317,6 @@
     var pm=document.getElementById('privacyModal'); if(pm&&pm.parentNode) pm.parentNode.removeChild(pm);
   }
 })();
-  </script>
-  <script src="payroll-sync.js"></script>
-  </body>
+</script>
+</body>
 </html>
-
