@@ -415,7 +415,7 @@
 
 
   /* PDF 輸出副本（離屏渲染用，文字化欄位） */
-  #pdfDocWrap{position:fixed;left:0;top:0;width:212mm;opacity:0.001;pointer-events:none;background:#fff}
+  #pdfDocWrap{position:absolute;left:-9999px;top:0;width:212mm;opacity:1;pointer-events:none;background:#fff}
   #pdfDocWrap .form-sheet{width:210mm;min-height:0;padding:4mm;background:#fff;box-shadow:none;font-size:14px;line-height:1.45}
   #pdfDocWrap .pdf-val{display:inline-block;min-width:1.6em;text-align:center;vertical-align:middle;white-space:pre-wrap;line-height:1.5}
   #pdfDocWrap .pdf-val-empty{display:inline-block;min-width:2.2em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
@@ -1016,7 +1016,7 @@
       wrap=document.createElement('div');
       wrap.id='pdfDocWrap';
       wrap.setAttribute('aria-hidden','true');
-      wrap.style.cssText='position:fixed;left:0;top:0;width:210mm;opacity:0.001;pointer-events:none;background:#fff';
+      wrap.style.cssText='position:absolute;left:-9999px;top:0;width:210mm;opacity:1;pointer-events:none;background:#fff';
       document.body.appendChild(wrap);
     }
     while(wrap.firstChild) wrap.removeChild(wrap.firstChild);
