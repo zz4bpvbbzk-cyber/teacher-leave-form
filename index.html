@@ -975,9 +975,13 @@
     });
     function sv(k){ var s2=snapshot[k]; return s2&&s2.v!==undefined?String(s2.v||'').trim():''; }
     // ② 請假日列表：每日 08:00–16:00 計（16:00 後不累計、週六日不計）→ 一天一張
-    var start=new Date(+sv('sY'),+sv('sM')-1,+sv('sD'),+(sv('sH')||'0'),+(sv('sMin')||'0'));
-    var end=new Date(+sv('eY'),+sv('eM')-1,+sv('eD'),+(sv('eH')||'0'),+(sv('eMin')||'0'));
-    if(isNaN(start)||isNaN(end)||end<start){
+    function lv(k){ var e=document.querySelector('[data-key="'+k+'"]'); return e?String(e.value||'').trim():''; }
+    function sv2(k){ var s=String(sv(k)==null?'':sv(k)).trim(); return (s!==''&&s!=='undefined')?s:lv(k); }
+    function pd(v){ var t=(v==null?'':String(v).trim()); return t===''?null:+t; }
+    function mdate(f1,f2,f3,f4,f5){ var y=pd(f1),mo=pd(f2),d=pd(f3),hh=pd(f4),mm=pd(f5); if(y==null||mo==null||d==null) return null; return new Date(y,mo-1,d,hh==null?0:hh,mm==null?0:mm); }
+    var start=mdate(sv2('sY'),sv2('sM'),sv2('sD'),sv2('sH'),sv2('sMin'));
+    var end=mdate(sv2('eY'),sv2('eM'),sv2('eD'),sv2('eH'),sv2('eMin'));
+    if(!start||!end||isNaN(start)||isNaN(end)||end<start){
       var now=new Date();
       start=new Date(now.getFullYear(),now.getMonth(),now.getDate(),8,0,0);
       end=new Date(now.getFullYear(),now.getMonth(),now.getDate(),16,0,0);
