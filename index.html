@@ -1065,7 +1065,6 @@
         l.removeAttribute('disabled');
       });
       clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
-      wrap.appendChild(clone);
       sheets.push(clone);
     });
     return sheets;
@@ -1238,14 +1237,17 @@
       try{ document.querySelectorAll('iframe').forEach(function(fr){ fr.parentNode&&fr.parentNode.removeChild(fr); }); }catch(_){}
       var sheets=buildPdfDoc();
       var canvases=[];
+      var wr=document.getElementById('pdfDocWrap');
       var chain=Promise.resolve();
       sheets.forEach(function(sh){
         chain=chain.then(function(){
+          wr.appendChild(sh); // 同一時間只掛載一張副本，避免同位疊放互相覆蓋
           return html2canvas(sh,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&el.tagName==='IFRAME'; }})
-            .then(function(c){ canvases.push(c); });
+            .then(function(c){ canvases.push(c); })
+            .then(function(){ if(sh.parentNode) sh.parentNode.removeChild(sh); });
         });
       });
-      return chain.then(function(){ return canvases; });
+      return chain.then(function(){ if(wr.parentNode) wr.parentNode.removeChild(wr); return canvases; });
     })
     .then(function(canvases){
       var doc=new jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
