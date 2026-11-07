@@ -1067,12 +1067,14 @@
       clone.querySelectorAll('.ck input').forEach(function(i){ i.removeAttribute('checked'); });
       sheets.push(clone);
     });
+    LAST_DAYLIST=dayList;
     return sheets;
     }catch(err){
       var m=err&&err.message?err.message:String(err);
       throw new Error('建立副本失敗('+m+')');
     }
   }
+  var LAST_DAYLIST=[];
   var pendingDoc=null;
   var zoomLv=1;
   function fitZoom(){
@@ -1090,7 +1092,11 @@
     var list=Array.isArray(imgs)?imgs:[imgs];
     var wrap=document.getElementById('pdfImg');
     var html='';
+    var wk2=['日','一','二','三','四','五','六'];
     list.forEach(function(src2,i){
+      var dd=LAST_DAYLIST[i]&&LAST_DAYLIST[i].start;
+      var cap=dd?('第 '+(i+1)+' 頁：'+(dd.getMonth()+1)+' 月 '+dd.getDate()+' 日（週'+wk2[dd.getDay()]+'）'):('第 '+(i+1)+' 頁');
+      html+='<div style="text-align:center;font-weight:700;font-size:15px;color:#1d4d8f;margin:8px 0 4px">'+cap+'</div>';
       html+='<img src="'+src2+'" alt="PDF 第'+(i+1)+'頁" style="display:block;margin:0 auto 10px;box-shadow:0 2px 8px rgba(0,0,0,.2)">';
     });
     if(list.length>1) html='<div style="text-align:center;font-weight:700;margin-bottom:8px">共 '+list.length+' 頁（1 日 1 張）</div>'+html;
@@ -1241,10 +1247,14 @@
       var chain=Promise.resolve();
       sheets.forEach(function(sh){
         chain=chain.then(function(){
-          wr.appendChild(sh); // 同一時間只掛載一張副本，避免同位疊放互相覆蓋
+          wr.appendChild(sh);
+          wr.style.left='0px'; wr.style.top='0px'; // 進入視窗：(0,0) 截圖行為最可靠
           return html2canvas(sh,{scale:3,useCORS:true,backgroundColor:'#ffffff',ignoreElements:function(el){ return el&&el.tagName==='IFRAME'; }})
             .then(function(c){ canvases.push(c); })
-            .then(function(){ if(sh.parentNode) sh.parentNode.removeChild(sh); });
+            .then(function(){
+              wr.style.left='-9999px'; wr.style.top='0px'; // 截完移回畫面外
+              if(sh.parentNode) sh.parentNode.removeChild(sh);
+            });
         });
       });
       return chain.then(function(){ if(wr.parentNode) wr.parentNode.removeChild(wr); return canvases; });
