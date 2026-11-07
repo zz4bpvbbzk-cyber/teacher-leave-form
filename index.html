@@ -1054,11 +1054,15 @@
       clone.querySelectorAll('.day-sec').forEach(function(sec,idx){ if(idx!==di && sec.parentNode) sec.parentNode.removeChild(sec); });
       var prows=clone.querySelectorAll('.prow');
       if(prows.length>=2){
-        prows[0].textContent='自 '+fmtD(day.start)+' 起';
-        prows[1].textContent='至 '+fmtD(day.end)+' 止';
+        prows[0].textContent='自 '+fmtD(start)+' 起';
+        prows[1].textContent='至 '+fmtD(end)+' 止';
       }
       var clt=clone.querySelector('#totalDisplay');
-      if(clt) clt.textContent=day.txt;
+      if(clt){
+        var th=0; dayList.forEach(function(dd){ th+=(dd.end-dd.start)/3600000; });
+        var td2=Math.floor(th/8+1e-9), tr2=Math.round((th-td2*8)*10)/10;
+        clt.textContent=td2+' 日 '+tr2+' 時';
+      }
       clone.querySelectorAll('.box').forEach(function(b){ b.parentNode.removeChild(b); });
       clone.querySelectorAll('.ck').forEach(function(l){
         l.style.cssText='';
