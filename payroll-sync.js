@@ -116,6 +116,7 @@
       submittedAt: now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
                    ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds()),
       teacherName: val('teacherName'),
+      serial: val('formSerial'),
       leaveTypes: leaveTypes(),
       reason: val('reason'),
       period: periodText(),

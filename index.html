@@ -155,6 +155,7 @@
   .form-top .note{margin:0;font-size:11.5px;color:#333;text-align:left}
   .form-no{font-size:12.5px;white-space:nowrap}
   .form-no .line{display:inline-block;min-width:7em;border-bottom:1px solid #000;height:1.15em;vertical-align:bottom}
+  .form-no input[data-key="formSerial"]{position:static;opacity:1;width:4.5em;height:auto;margin:0 0 0 2px;background:var(--field);border:1px dashed var(--field-line);border-radius:3px;padding:1px 4px;text-align:center;font-weight:700}
 
   /* ---------- 第一區：基本資料 ---------- */
   .t1{border:1.5px solid #000;margin-top:4px}
@@ -494,7 +495,7 @@
       <h1>高雄市新興區新興國民小學【教師請假】課務／級務處理單</h1>
       <div class="top-meta">
         <p class="note">（本單請於線上差勤系統（WEBITR）送出假單後，請將本處理單送至教學組，若無課務免付）</p>
-        <div class="form-no">編號：<span class="line"></span></div>
+        <div class="form-no">編號：<input data-key="formSerial" type="text" placeholder="自動編號"></div>
       </div>
     </div>
 
@@ -1236,6 +1237,13 @@
     if(v.sub===false) msgs.push('已勾選「自行尋覓代課教師」，請填寫代課教師姓名');
     if(!v.fee) msgs.push('課務明細 '+v.feeRows.join('、')+' 的「鐘點費」請擇一勾選');
     if(msgs.length){ showToast(msgs.join('，')); return; }
+    try{
+      var sn=parseInt(localStorage.getItem('xinxing-leave-serial')||'0',10)||0;
+      sn=sn+1;
+      try{ localStorage.setItem('xinxing-leave-serial',String(sn)); }catch(_){}
+      var sf=document.querySelector('[data-key="formSerial"]');
+      if(sf){ sf.value=('000'+sn).slice(-3); save(); }
+    }catch(_){}
     if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){ showToast('PDF 功能載入中，請稍候再試'); return; }
     showToast('正在產生 PDF…');
     var body=document.body;
