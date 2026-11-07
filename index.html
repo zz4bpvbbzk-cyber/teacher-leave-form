@@ -1115,6 +1115,37 @@
   document.getElementById('zoomOut').addEventListener('click',function(){ zoomLv=Math.max(zoomLv-0.25,0.25); applyZoom(); });
   document.getElementById('zoomFit').addEventListener('click',function(){ fitZoom(); });
   function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'); }
+  function askSerialModal(msg){
+    return new Promise(function(resolve){
+      var ex=document.getElementById('serialAsk'); if(ex) ex.parentNode.removeChild(ex);
+      var box=document.createElement('div');
+      box.id='serialAsk';
+      box.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100001;display:flex;align-items:center;justify-content:center;padding:18px;font-family:-apple-system,Helvetica,sans-serif;';
+      box.innerHTML='<div style="background:#fff;border-radius:14px;max-width:420px;width:100%;padding:22px;line-height:1.6;color:#222;box-shadow:0 20px 50px rgba(0,0,0,.35)">'+
+        '<h3 style="margin:0 0 8px;font-size:17px;color:#b3402e">⚠️ 無法取得假單編號</h3>'+
+        '<div style="font-size:13px;color:#444;margin-bottom:14px">'+esc(msg)+'<br>假單須向薪資系統取得流水號並登錄明細；網路正常時請按「重試」。</div>'+
+        '<div style="display:flex;gap:10px">'+
+          '<span id="saRetry" style="flex:1;text-align:center;background:#1d4d8f;color:#fff;border-radius:8px;padding:10px 12px;font-weight:700;font-size:14px;cursor:pointer">重試</span>'+
+          '<span id="saSkip" style="flex:1;text-align:center;background:#eef1f4;color:#333;border-radius:8px;padding:10px 12px;font-weight:600;font-size:14px;cursor:pointer">略過編號直接下載</span>'+
+        '</div></div>';
+      document.body.appendChild(box);
+      document.getElementById('saRetry').onclick=function(){ box.parentNode.removeChild(box); resolve('retry'); };
+      document.getElementById('saSkip').onclick=function(){ box.parentNode.removeChild(box); resolve('skip'); };
+    });
+  }
+  function issueSerialFlow(){
+    function attempt(){
+      var pr=(window.payrollIssueSerial?window.payrollIssueSerial():Promise.resolve({ok:true,serial:null}));
+      return pr.then(function(res){
+        if(res&&res.ok) return res;
+        return askSerialModal(res&&res.reason==='timeout'?'連線薪資系統逾時。':(String(res&&res.reason||'').indexOf('沒有')===-1&&res&&res.reason&&res.reason.length>8?String(res.reason):'連線薪資系統失敗。')).then(function(a){
+          if(a==='retry') return attempt();
+          return {ok:true,serial:null,skipped:true};
+        });
+      });
+    }
+    return attempt();
+  }
   function showAndroidSave(url, filename){
     var ex=document.getElementById('androidSave'); if(ex) ex.parentNode.removeChild(ex);
     var box=document.createElement('div');
@@ -1237,13 +1268,6 @@
     if(v.sub===false) msgs.push('已勾選「自行尋覓代課教師」，請填寫代課教師姓名');
     if(!v.fee) msgs.push('課務明細 '+v.feeRows.join('、')+' 的「鐘點費」請擇一勾選');
     if(msgs.length){ showToast(msgs.join('，')); return; }
-    try{
-      var sn=parseInt(localStorage.getItem('xinxing-leave-serial')||'0',10)||0;
-      sn=sn+1;
-      try{ localStorage.setItem('xinxing-leave-serial',String(sn)); }catch(_){}
-      var sf=document.querySelector('[data-key="formSerial"]');
-      if(sf){ sf.value=('000'+sn).slice(-3); save(); }
-    }catch(_){}
     if(typeof html2canvas==='undefined'||typeof jspdf==='undefined'){ showToast('PDF 功能載入中，請稍候再試'); return; }
     showToast('正在產生 PDF…');
     var body=document.body;
@@ -1253,7 +1277,13 @@
     .then(function(){
       // 清除頁面上任何殘留 iframe(舊版預覽殘留/擴充功能注入), 避免跨域 frame 錯誤
       try{ document.querySelectorAll('iframe').forEach(function(fr){ fr.parentNode&&fr.parentNode.removeChild(fr); }); }catch(_){}
-      var sheets=buildPdfDoc();
+      return issueSerialFlow().then(function(res){
+        var sf=document.querySelector('[data-key="formSerial"]');
+        if(sf){ sf.value=(res&&res.serial)?res.serial:''; if(res&&res.serial) save(); }
+        return buildPdfDoc();
+      });
+    })
+    .then(function(sheets){
       var canvases=[];
       var wr=document.getElementById('pdfDocWrap');
       var chain=Promise.resolve();
