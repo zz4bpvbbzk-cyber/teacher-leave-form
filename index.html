@@ -495,7 +495,7 @@
       <h1>高雄市新興區新興國民小學【教師請假】課務／級務處理單</h1>
       <div class="top-meta">
         <p class="note">（本單請於線上差勤系統（WEBITR）送出假單後，請將本處理單送至教學組，若無課務免付）</p>
-        <div class="form-no">編號：<input data-key="formSerial" type="text" placeholder="自動編號"></div>
+        <div class="form-no" id="formNoLabel" title="雙擊可重置編號紀錄（測試用）">編號：<input data-key="formSerial" type="text" placeholder="自動編號"></div>
       </div>
     </div>
 
@@ -1385,6 +1385,16 @@
     }
   });
 
+  try{
+    var fnl=document.getElementById('formNoLabel');
+    if(fnl){ fnl.addEventListener('dblclick',function(){
+      if(confirm('重置編號紀錄？\n（清除本機的取號快取與編號欄，下次下載將重新向薪資系統取號）')){
+        try{ localStorage.removeItem('payroll-last-issue'); }catch(_){}
+        var sf=document.querySelector('[data-key="formSerial"]'); if(sf) sf.value='';
+        save(); showToast('已重置編號紀錄');
+      }
+    }); }
+  }catch(_){}
   buildSections(true);
   load();
   try{ (function(){ var g=function(k){ var el=document.querySelector('[data-key="'+k+'"]'); return el?el.value:''; }; END_TOUCHED=['Y','M','D','H','Min'].some(function(s){ return g('e'+s)!==g('s'+s); }); })(); }catch(_){}
