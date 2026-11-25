@@ -1212,7 +1212,9 @@
       }
       var name=document.querySelector('[data-key="teacherName"]');
       var nm=name?(name.value||'').trim():'';
-      return (mm+dd)+(nm?nm:'')+'請假課務處理單.pdf';
+      var sn=document.querySelector('[data-key="formSerial"]');
+      var no=sn?String(sn.value||'').trim():'';
+      return (mm+dd)+(nm?nm:'')+'請假課務處理單'+(no?('_'+no):'')+'.pdf';
     }catch(e){ return '教師請假課務處理單.pdf'; }
   }
   document.getElementById('pdfConfirm').addEventListener('click',function(){
